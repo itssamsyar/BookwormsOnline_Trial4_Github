@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="../build/BookwormsOnline_Trial4.props" />
+</Project>

@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "BookwormsOnline_Trial4/1.0.0": {
+        "runtime": {
+          "BookwormsOnline_Trial4.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "BookwormsOnline_Trial4/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
