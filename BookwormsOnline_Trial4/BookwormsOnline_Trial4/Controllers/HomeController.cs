@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Text.RegularExpressions;
+using System.Web;
 using Microsoft.AspNetCore.Mvc;
 using BookwormsOnline_Trial4.Models;
 using BookwormsOnline_Trial4.Models.DbContext;
@@ -187,8 +189,21 @@ public class HomeController : Controller
     
     
     
-    
-    
+    // METHOD TO SANITIZE INPUT
+    private string SanitizeInput(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+        {
+            return input;
+        }
+
+        // Convert <script> into &ltscript&gt to prevent execution
+        input = Regex.Replace(input, "<script", "&ltscript", RegexOptions.IgnoreCase);
+
+        // Encode input to prevent XSS attacks
+        return HttpUtility.HtmlEncode(input);
+    }
+
     
     
     
@@ -273,6 +288,47 @@ public class HomeController : Controller
         
         
         Console.WriteLine("✅ Model validation passed");
+        
+        
+        Console.WriteLine("🛠️ Sanitizing Inputs Now...");
+
+// ✅ Sanitize Inputs to Prevent XSS
+        Console.WriteLine($"🔹 Original First Name: {model.FirstName}");
+        model.FirstName = SanitizeInput(model.FirstName);
+        Console.WriteLine($"✅ Sanitized First Name: {model.FirstName}");
+
+        Console.WriteLine($"🔹 Original Last Name: {model.LastName}");
+        model.LastName = SanitizeInput(model.LastName);
+        Console.WriteLine($"✅ Sanitized Last Name: {model.LastName}");
+
+        Console.WriteLine($"🔹 Original Email: {model.Email}");
+        model.Email = SanitizeInput(model.Email);
+        Console.WriteLine($"✅ Sanitized Email: {model.Email}");
+
+        Console.WriteLine($"🔹 Original Billing Address: {model.BillingAddress}");
+        model.BillingAddress = SanitizeInput(model.BillingAddress);
+        Console.WriteLine($"✅ Sanitized Billing Address: {model.BillingAddress}");
+
+        Console.WriteLine($"🔹 Original Phone Number: {model.PhoneNumber}");
+        model.PhoneNumber = SanitizeInput(model.PhoneNumber);
+        Console.WriteLine($"✅ Sanitized Phone Number: {model.PhoneNumber}");
+
+        Console.WriteLine($"🔹 Original Password: {model.Password}");
+        model.Password = SanitizeInput(model.Password);
+        Console.WriteLine($"✅ Sanitized Password: {model.Password}");
+
+        Console.WriteLine($"🔹 Original Confirm Password: {model.ConfirmPassword}");
+        model.ConfirmPassword = SanitizeInput(model.ConfirmPassword);
+        Console.WriteLine($"✅ Sanitized Confirm Password: {model.ConfirmPassword}");
+
+// ✅ Shipping Address should allow ALL special characters, but encode before displaying in the app
+        Console.WriteLine($"🔹 Original Shipping Address: {model.ShippingAddress}");
+        model.ShippingAddress = HttpUtility.HtmlEncode(model.ShippingAddress);
+        Console.WriteLine($"✅ HTML Encoded Shipping Address: {model.ShippingAddress}");
+
+        Console.WriteLine("✅ Sanitization Complete!");
+
+        
         Console.WriteLine("🛠 Creating new ApplicationUser object...");
         
         // Create a new user object from ApplicationUser
