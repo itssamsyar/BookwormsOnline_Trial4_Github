@@ -27,6 +27,10 @@ namespace BookwormsOnline_Trial4.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<string>("AuthToken")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<string>("BillingAddress")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -51,6 +55,9 @@ namespace BookwormsOnline_Trial4.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
+
+                    b.Property<DateTime?>("LastLoginTime")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("LastName")
                         .IsRequired()

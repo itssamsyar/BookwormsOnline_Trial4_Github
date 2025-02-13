@@ -476,19 +476,27 @@ public class HomeController : Controller
         {
             Console.WriteLine($"✅ Login Successful! User: {user.Email}");
 
-            // ✅ Store session variables
-            HttpContext.Session.SetString("LoggedIn", user.Email);
+            // ✅ Generate a new unique session token
+            string newAuthToken = Guid.NewGuid().ToString();
+
+            // ✅ Invalidate previous session by clearing old token in DB
+            user.AuthToken = newAuthToken;
+            user.LastLoginTime = DateTime.UtcNow;
+            await _userManager.UpdateAsync(user);
+
+            // ✅ Store session data
             HttpContext.Session.SetString("UserId", user.Id);
+            HttpContext.Session.SetString("AuthToken", newAuthToken);
+        
+            // ✅ Store the "LoggedIn" session variable here
+            HttpContext.Session.SetString("LoggedIn", user.Email);
 
-            string guid = Guid.NewGuid().ToString();
-            HttpContext.Session.SetString("AuthToken", guid);
-
-            Response.Cookies.Append("AuthToken", guid, new CookieOptions
+            Response.Cookies.Append("AuthToken", newAuthToken, new CookieOptions
             {
-                HttpOnly = true, // Security best practice
-                Secure = true, // Requires HTTPS
-                SameSite = SameSiteMode.Strict, // Helps prevent CSRF
-                Expires = DateTime.UtcNow.AddHours(1) // Expiration time
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddHours(1)
             });
 
             return RedirectToAction("Home", "Home");
@@ -608,6 +616,22 @@ public class HomeController : Controller
     public async Task<IActionResult> ConfirmLogout()
     {
         Console.WriteLine("🚪 Logging out user...");
+        
+        // ✅ Get user from session
+        var userId = HttpContext.Session.GetString("UserId");
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user != null)
+            {
+                Console.WriteLine($"🔹 Invalidating session for user: {user.Email}");
+
+                // ✅ Invalidate session token in the database
+                user.AuthToken = null;
+                await _userManager.UpdateAsync(user);
+            }
+        }
 
         // ✅ Clear session data
         HttpContext.Session.Clear();

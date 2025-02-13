@@ -44,6 +44,8 @@ namespace BookwormsOnline_Trial4.Migrations
                     OldPasswordHash1 = table.Column<string>(type: "longtext", nullable: true),
                     OldPasswordHash2 = table.Column<string>(type: "longtext", nullable: true),
                     UpdatedPasswordTime = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    AuthToken = table.Column<string>(type: "longtext", nullable: false),
+                    LastLoginTime = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     UserName = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true),

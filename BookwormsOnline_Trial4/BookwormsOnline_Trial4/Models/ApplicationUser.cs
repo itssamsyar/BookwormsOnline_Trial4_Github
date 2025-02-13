@@ -38,12 +38,19 @@ namespace BookwormsOnline_Trial4.Models
         
         // ADDITIONAL FIELDS FOR THE ADVANCED FEATURES ARE LISTED BELOW
         
+        
+        
         // PASSWORD REUSE POLICY
         public string? OldPasswordHash1 { get; set; } // Previous password
         public string? OldPasswordHash2 { get; set; } // 2nd most recent password
         
         // PASSWORD AGE POLICY
         public DateTime UpdatedPasswordTime { get; set; } 
+        
+        
+        // TRACKING SESSIONS
+        public string AuthToken { get; set; } = string.Empty;   // Stores session identifier
+        public DateTime? LastLoginTime { get; set; }  // Tracks last login
 
         
     }

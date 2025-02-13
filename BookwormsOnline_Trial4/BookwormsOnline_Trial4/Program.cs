@@ -1,3 +1,4 @@
+using BookwormsOnline_Trial4.Middleware;
 using BookwormsOnline_Trial4.Models;
 using BookwormsOnline_Trial4.Models.DbContext;
 using BookwormsOnline_Trial4.Services;
@@ -51,8 +52,13 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 
+
 // SESSION STUFF
 app.UseSession();
+
+// USE MIDDLEWARE FOR BROWSER AUTO LOGOUT
+app.UseMiddleware<SessionValidationMiddleware>();
+
 
 // FOR CUSTOM ERROR PAGES
 app.UseExceptionHandler("/error/500"); 
