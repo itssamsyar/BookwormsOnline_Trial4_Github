@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BookwormsOnline_Trial4.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
-    [Migration("20250213131616_InitialCreate")]
+    [Migration("20250213175803_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

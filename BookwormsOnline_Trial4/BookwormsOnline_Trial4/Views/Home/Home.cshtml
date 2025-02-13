@@ -39,6 +39,10 @@
                     <td>@ViewBag.User.PhoneNumber</td>
                 </tr>
                 <tr>
+                    <th>Credit Card Number:</th>
+                    <td>@ViewBag.User.DecryptedCreditCard</td>
+                </tr>
+                <tr>
                     <th>Billing Address:</th>
                     <td>@ViewBag.User.BillingAddress</td>
                 </tr>
@@ -80,8 +84,17 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        console.log("Session Timeout Script Loaded");
+        console.log("Session Timeout & Cache Prevention Script Loaded");
 
+        // ✅ Prevent back navigation from showing cached content
+        window.history.replaceState(null, "", window.location.href);
+        window.onpageshow = function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        };
+
+        // ✅ Session Timeout Logic (Auto logout after inactivity)
         const sessionTimeout = @((int)TimeSpan.FromSeconds(30).TotalMilliseconds); // 30s timeout
         let logoutTimer;
 
@@ -108,3 +121,4 @@
         resetLogoutTimer();
     });
 </script>
+

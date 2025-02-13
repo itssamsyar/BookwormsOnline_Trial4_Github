@@ -32,8 +32,9 @@ builder.Services.ConfigureApplicationCookie(Config =>
 builder.Services.AddHttpClient<CaptchaService>();
 builder.Services.AddScoped<CaptchaService>();
 
-// TO ENCRYPT & DECRYPT CREDIT CARD
+// TO ENCRYPT & DECRYPT CREDIT CARD USING SERVICE
 builder.Services.AddDataProtection();
+builder.Services.AddScoped<EncryptionService>();
 
 
 var app = builder.Build();

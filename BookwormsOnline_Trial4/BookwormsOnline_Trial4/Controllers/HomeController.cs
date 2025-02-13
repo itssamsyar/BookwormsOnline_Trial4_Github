@@ -24,6 +24,7 @@ public class HomeController : Controller
     
     // For Encrypting CreditCard
     private readonly IDataProtector _protector;
+    private readonly EncryptionService _encryptionService;
     
     // For Session Cookies
     private readonly IHttpContextAccessor contxt;
@@ -37,7 +38,8 @@ public class HomeController : Controller
         CaptchaService captchaService, 
         IDataProtectionProvider provider,
         IHttpContextAccessor httpContextAccessor,
-        AuthDbContext context)
+        AuthDbContext context,
+        EncryptionService encryptionService)
     {
         _logger = logger;
         _userManager = userManager;
@@ -46,6 +48,7 @@ public class HomeController : Controller
         _protector = provider.CreateProtector("CreditCardProtection");
         contxt = httpContextAccessor;
         _context = context;
+        _encryptionService = encryptionService;
         
     }
     
@@ -69,8 +72,15 @@ public class HomeController : Controller
     
     // Loads the /Home/Home.cshtml (logged in view)
     [Authorize]
-    public async Task<IActionResult> Home()
+    public async Task<IActionResult> Home([FromServices] EncryptionService encryptionService)
     {
+        
+        // ✅ Prevent caching so that pressing "Back" doesn’t load the old page
+        Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+        Response.Headers["Pragma"] = "no-cache";
+        Response.Headers["Expires"] = "0";
+        
+        
         string userId = HttpContext.Session.GetString("UserId");
         string sessionAuthToken = HttpContext.Session.GetString("AuthToken");
         string cookieAuthToken = Request.Cookies["AuthToken"];
@@ -85,28 +95,45 @@ public class HomeController : Controller
             return RedirectToAction("Login", "Home");
         }
 
-        // ✅ Securely retrieve user data using parameterized query
+        // ✅ Retrieve full ApplicationUser object instead of using Select()
         var user = await _context.Users
-            .Where(u => u.Id == userId)
-            .Select(u => new 
-            {
-                u.FirstName,
-                u.LastName,
-                u.Email,
-                u.PhoneNumber,
-                u.BillingAddress,
-                u.ShippingAddress,
-                u.PhotoPath
-            })
-            .FirstOrDefaultAsync();
+            .OfType<ApplicationUser>() // Ensure Entity Framework correctly casts to ApplicationUser
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
 
         if (user == null)
         {
             Console.WriteLine("❌ User not found in database!");
             return RedirectToAction("Login", "Home");
         }
+        
+        // ✅ Get encrypted credit card from the database
+        string decryptedCreditCard = "Not Available";
+        try
+        {
+            if (!string.IsNullOrEmpty(user.EncryptedCreditCard))
+            {
+                decryptedCreditCard = encryptionService.Decrypt(user.EncryptedCreditCard);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error decrypting credit card: {ex.Message}");
+        }
+        
+        ViewBag.User = new
+        {
+            user.FirstName,
+            user.LastName,
+            user.Email,
+            user.PhoneNumber,
+            user.BillingAddress,
+            user.ShippingAddress,
+            user.PhotoPath,
+            DecryptedCreditCard = decryptedCreditCard
+        };
 
-        ViewBag.User = user; // Pass user details to the view
+
         ViewBag.IsLoggedIn = true;
         ViewBag.Message = $"Welcome, {user.FirstName} {user.LastName}!";
 
@@ -249,7 +276,7 @@ public class HomeController : Controller
         Console.WriteLine("🛠 Creating new ApplicationUser object...");
         
         // Create a new user object from ApplicationUser
-        var user = new ApplicationUser(_protector)
+        var user = new ApplicationUser
         {
             UserName = model.Email,  // Identity requires a unique username, using email as default
             Email = model.Email,
@@ -263,12 +290,21 @@ public class HomeController : Controller
         Console.WriteLine($"✅ Created user object: {user.Email}");
 
         
-        // Encrypt and store credit card number
-        Console.WriteLine("🔒 Encrypting credit card...");
-        user.SetEncryptedCreditCard(model.CreditCardNumber);
+        // ✅ Encrypt and store credit card number using EncryptionService
+        try
+        {
+            Console.WriteLine("🔒 Encrypting credit card...");
+            user.GetType().GetProperty("EncryptedCreditCard")
+                .SetValue(user, _encryptionService.Encrypt(model.CreditCardNumber));
+            Console.WriteLine("✅ Credit card encrypted successfully");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error encrypting credit card: {ex.Message}");
+            ModelState.AddModelError("", "There was an error processing your credit card. Please try again.");
+            return View(model);
+        }
 
-
-        Console.WriteLine("✅ Credit card encrypted successfully");
         
         // Define uploads directory
         var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
@@ -422,21 +458,47 @@ public class HomeController : Controller
     }
     
     
-    // Action Method for Confirm Logout Button
+    
+    // Action Method for Logout
     [HttpPost]
     public async Task<IActionResult> ConfirmLogout()
     {
+        Console.WriteLine("🚪 Logging out user...");
+
         // ✅ Clear session data
         HttpContext.Session.Clear();
 
-        // ✅ Delete session cookie
-        if (Request.Cookies.ContainsKey("AuthToken"))
+        // ✅ Abandon session (ensures a new session is created for the next request)
+        HttpContext.Session.Remove("UserId");
+        HttpContext.Session.Remove("LoggedIn");
+        HttpContext.Session.Remove("AuthToken");
+
+        // ✅ Delete session-related cookies
+        if (Request.Cookies.ContainsKey(".AspNetCore.Session"))
         {
-            Response.Cookies.Delete("AuthToken");
+            Response.Cookies.Append(".AspNetCore.Session", "", new CookieOptions
+            {
+                Expires = DateTime.UtcNow.AddMonths(-20),
+                HttpOnly = true,
+                Secure = true
+            });
         }
 
+        if (Request.Cookies.ContainsKey("AuthToken"))
+        {
+            Response.Cookies.Append("AuthToken", "", new CookieOptions
+            {
+                Expires = DateTime.UtcNow.AddMonths(-20),
+                HttpOnly = true,
+                Secure = true
+            });
+        }
+
+        // ✅ Sign out the user
         await _signInManager.SignOutAsync();
-        return RedirectToAction("Login");
+
+        // ✅ Redirect to Login page
+        return RedirectToAction("Login", "Home");
     }
 
     

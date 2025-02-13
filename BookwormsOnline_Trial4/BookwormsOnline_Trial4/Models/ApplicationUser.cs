@@ -32,53 +32,6 @@ namespace BookwormsOnline_Trial4.Models
         public string PhotoPath { get; set; } // Stores file path instead of byte array
 
         
-        
-        
-        
-        
-        // METHODS TO ENCRYPT CREDIT CARD
-        // ✅ Parameterless constructor (required by Entity Framework)
-        private IDataProtector _protector;
-
-        public ApplicationUser() { }
-
-        // ✅ Constructor with dependency injection for encryption
-        public ApplicationUser(IDataProtectionProvider provider)
-        {
-            _protector = provider.CreateProtector("CreditCardProtection");
-        }
-
-        // Encrypt credit card before storing in database
-        public void SetEncryptedCreditCard(string creditCardNumber)
-        {
-            if (_protector == null)
-            {
-                throw new InvalidOperationException("Data protector is not initialized.");
-            }
-            EncryptedCreditCard = _protector.Protect(creditCardNumber);
-        }
-
-        // Decrypt credit card (for admin use only)
-        public string GetDecryptedCreditCard()
-        {
-            if (_protector == null)
-            {
-                throw new InvalidOperationException("Data protector is not initialized.");
-            }
-            return _protector.Unprotect(EncryptedCreditCard);
-        }
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
         // EMAIL, PASSWORD, PHONE_NUMBER WILL BE HANDLED BY IDENTITY USER ITSELF
         
         
