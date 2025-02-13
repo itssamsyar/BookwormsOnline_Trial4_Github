@@ -11,31 +11,81 @@
         <div class="col-md-6">
             <h2 class="text-center">Register</h2>
 
-            <form method="post" action="Register">
-                <div asp-validation-summary="All" class="text-danger"></div>
+            <form method="post" asp-action="Register" asp-controller="Home" enctype="multipart/form-data">
 
                 <div class="mb-3">
-                    @* The Email, Password, ConfirmPassword is taken directly from the RegisterViewModel *@
+                    <label class="form-label" asp-for="FirstName">First Name</label>
+                    <input type="text" asp-for="FirstName" class="form-control"/>
+                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" asp-for="LastName">Last Name</label>
+                    <input type="text" asp-for="LastName" class="form-control"/>
+                    <span asp-validation-for="LastName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
                     <label class="form-label" asp-for="Email">Email Address</label>
-                    <input type="text" asp-for="Email" class="form-control"/>
+                    <input type="email" asp-for="Email" class="form-control"/>
                     <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
+                    <label class="form-label" asp-for="PhoneNumber">Phone Number</label>
+                    <input type="text" asp-for="PhoneNumber" class="form-control"/>
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" asp-for="BillingAddress">Billing Address</label>
+                    <input type="text" asp-for="BillingAddress" class="form-control"/>
+                    <span asp-validation-for="BillingAddress" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" asp-for="ShippingAddress">Shipping Address</label>
+                    <input type="text" asp-for="ShippingAddress" class="form-control"/>
+                    <span asp-validation-for="ShippingAddress" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" asp-for="CreditCardNumber">Credit Card Number</label>
+                    <input type="text" asp-for="CreditCardNumber" class="form-control"/>
+                    <span asp-validation-for="CreditCardNumber" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
                     <label class="form-label" asp-for="Password">Password</label>
-                    <input type="password" asp-for="Password" class="form-control" />
+                    <input type="password" asp-for="Password" class="form-control" id="Password" onkeyup="checkPasswordStrength()" />
                     <span asp-validation-for="Password" class="text-danger"></span>
+                    <small id="passwordFeedback" class="form-text"></small>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label" asp-for="ConfirmPassword">Confirm Password</label>
-                    <input type="password" asp-for="ConfirmPassword" class="form-control" />
+                    <input type="password" asp-for="ConfirmPassword" class="form-control" id="ConfirmPassword" />
                     <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                 </div>
-                
+
+                <!-- Show/Hide Password Checkbox -->
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="showPassword">
+                    <label class="form-check-label" for="showPassword">
+                        Show Password
+                    </label>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" asp-for="Photo">Upload Profile Photo (.JPG only)</label>
+                    <input type="file" asp-for="Photo" class="form-control" accept=".jpg,.jpeg,.pdf" />
+                    <span asp-validation-for="Photo" class="text-danger"></span>
+                </div>
+
+
                 @* Hidden Captcha Field *@
                 <!-- Hidden reCAPTCHA field -->
-                <input type="hidden" id="g-recaptcha-response" name="gRecaptchaResponse" />
+                <input type="hidden" id="g-recaptcha-response" name="gRecaptchaResponse"/>
 
 
                 <div class="mb-3">
@@ -47,12 +97,73 @@
 </div>
 
 
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // ✅ Attach password strength check event
+        var passwordField = document.getElementById("Password");
+        if (passwordField) {
+            passwordField.addEventListener("keyup", checkPasswordStrength);
+        }
+
+        // ✅ Attach show/hide password toggle event
+        var togglePasswordField = document.getElementById("showPassword");
+        if (togglePasswordField) {
+            togglePasswordField.addEventListener("change", togglePassword);
+        }
+    });
+
+    function checkPasswordStrength() {
+        var password = document.getElementById("Password").value;
+        var feedback = document.getElementById("passwordFeedback");
+
+        var strength = 0;
+        if (password.length >= 12) strength++; // Length
+        if (/[a-z]/.test(password)) strength++; // Lowercase
+        if (/[A-Z]/.test(password)) strength++; // Uppercase
+        if (/\d/.test(password)) strength++; // Number
+        if (/[$@@$!%*?&]/.test(password)) strength++; // Special Character (Fixed '' Issue)
+
+        switch (strength) {
+            case 0:
+            case 1:
+                feedback.innerHTML = "Weak (Add more characters)";
+                feedback.style.color = "red";
+                break;
+            case 2:
+                feedback.innerHTML = "Medium (Add uppercase/lowercase)";
+                feedback.style.color = "orange";
+                break;
+            case 3:
+                feedback.innerHTML = "Strong (Add numbers/special characters)";
+                feedback.style.color = "blue";
+                break;
+            case 4:
+                feedback.innerHTML = "Excellent!";
+                feedback.style.color = "green";
+                break;
+            default:
+                feedback.innerHTML = "";
+                break;
+        }
+    }
+
+    function togglePassword() {
+        var passwordField = document.getElementById("Password");
+        var confirmPasswordField = document.getElementById("ConfirmPassword");
+        var isChecked = document.getElementById("showPassword").checked;
+
+        var type = isChecked ? "text" : "password";
+        passwordField.type = type;
+        confirmPasswordField.type = type;
+    }
+</script>
+
 
 <!-- Google reCAPTCHA v3 script -->
 <script src="https://www.google.com/recaptcha/api.js?render=6Le529QqAAAAAGy1gkujHdXbX5nyX9e2xi1dXNw8"></script>
 <script>
     grecaptcha.ready(function () {
-        grecaptcha.execute('6Le529QqAAAAAGy1gkujHdXbX5nyX9e2xi1dXNw8', { action: 'Register' }).then(function (token) {
+        grecaptcha.execute('6Le529QqAAAAAGy1gkujHdXbX5nyX9e2xi1dXNw8', {action: 'Register'}).then(function (token) {
             document.getElementById('g-recaptcha-response').value = token;
             console.log("Generated reCAPTCHA Token:", token); // ✅ Debug Log
         });

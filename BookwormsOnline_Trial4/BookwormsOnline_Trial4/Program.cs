@@ -1,6 +1,8 @@
+using BookwormsOnline_Trial4.Models;
 using BookwormsOnline_Trial4.Models.DbContext;
 using BookwormsOnline_Trial4.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,9 +18,9 @@ builder.Services.AddSession(options =>
 });
 
 
-// ADD THE DBCONTEXT AND IDENTITY
+// ADD THE DBCONTEXT AND IDENTITY, USE APPLICATION USER
 builder.Services.AddDbContext<AuthDbContext>();
-builder.Services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<AuthDbContext>();
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<AuthDbContext>();
 
 // FORCE THE USER TO GO TO LOGIN PAGE IF NOT LOGGED IN
 builder.Services.ConfigureApplicationCookie(Config =>
@@ -29,6 +31,10 @@ builder.Services.ConfigureApplicationCookie(Config =>
 // ADD CAPTCHA SERVICE
 builder.Services.AddHttpClient<CaptchaService>();
 builder.Services.AddScoped<CaptchaService>();
+
+// TO ENCRYPT & DECRYPT CREDIT CARD USING SERVICE
+builder.Services.AddDataProtection();
+builder.Services.AddScoped<EncryptionService>();
 
 
 var app = builder.Build();
@@ -48,6 +54,9 @@ app.UseStaticFiles();
 // SESSION STUFF
 app.UseSession();
 
+// FOR CUSTOM ERROR PAGES
+app.UseExceptionHandler("/error/500"); 
+app.UseStatusCodePagesWithRedirects("/error/{0}"); 
 
 app.UseRouting();
 

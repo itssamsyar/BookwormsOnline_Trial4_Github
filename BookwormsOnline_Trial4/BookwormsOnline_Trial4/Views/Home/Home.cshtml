@@ -1,8 +1,128 @@
-
-
 @{
     ViewData["Title"] = "Home Page";
 }
 
-<h1>@ViewData["Title"]</h1>
+<h1>Home Page</h1>
+
+<div class="container mt-4">
+    <fieldset>
+        <legend>User Details</legend>
+
+        <br />
+
+        <!-- Display welcome message -->
+        @if (!string.IsNullOrEmpty(ViewBag.Message))
+        {
+            <p class="alert alert-success">@ViewBag.Message</p>
+        }
+
+        <br />
+
+        <!-- Display User Info -->
+        @if (ViewBag.IsLoggedIn == true && ViewBag.User != null)
+        {
+            <table class="table table-bordered">
+                <tr>
+                    <th>First Name:</th>
+                    <td>@ViewBag.User.FirstName</td>
+                </tr>
+                <tr>
+                    <th>Last Name:</th>
+                    <td>@ViewBag.User.LastName</td>
+                </tr>
+                <tr>
+                    <th>Email:</th>
+                    <td>@ViewBag.User.Email</td>
+                </tr>
+                <tr>
+                    <th>Phone Number:</th>
+                    <td>@ViewBag.User.PhoneNumber</td>
+                </tr>
+                <tr>
+                    <th>Credit Card Number:</th>
+                    <td>@ViewBag.User.DecryptedCreditCard</td>
+                </tr>
+                <tr>
+                    <th>Billing Address:</th>
+                    <td>@ViewBag.User.BillingAddress</td>
+                </tr>
+                <tr>
+                    <th>Shipping Address:</th>
+                    <td>@ViewBag.User.ShippingAddress</td>
+                </tr>
+                <tr>
+                    <th>Profile Photo:</th>
+                    <td>
+                        @if (!string.IsNullOrEmpty(ViewBag.User.PhotoPath))
+                        {
+                            <img src="@ViewBag.User.PhotoPath" alt="Profile Photo" width="150" height="150">
+                        }
+                        else
+                        {
+                            <p>No profile photo available.</p>
+                        }
+                    </td>
+                </tr>
+            </table>
+        }
+        else
+        {
+            <p class="alert alert-danger">No user data found!</p>
+        }
+
+        <br /><br />
+
+        <!-- Logout Button (Only visible if logged in) -->
+        @if (ViewBag.IsLoggedIn == true)
+        {
+            <form id="logoutForm" method="post" asp-action="ConfirmLogout" asp-controller="Home">
+                <button type="submit" class="btn btn-danger">Logout</button>
+            </form>
+            <form method="get" asp-action="ChangePassword" asp-controller="Home">
+                <button type="submit" class="btn btn-warning">Change Password</button>
+            </form>
+
+        }
+    </fieldset>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        console.log("Session Timeout & Cache Prevention Script Loaded");
+
+        // ✅ Prevent back navigation from showing cached content
+        window.history.replaceState(null, "", window.location.href);
+        window.onpageshow = function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        };
+
+        // ✅ Session Timeout Logic (Auto logout after inactivity)
+        const sessionTimeout = @((int)TimeSpan.FromSeconds(30).TotalMilliseconds); // 30s timeout
+        let logoutTimer;
+
+        function resetLogoutTimer() {
+            clearTimeout(logoutTimer);
+            logoutTimer = setTimeout(() => {
+                console.log("Logging out due to inactivity...");
+
+                // ✅ Check if logoutForm exists before submitting
+                let logoutForm = document.getElementById("logoutForm");
+                if (logoutForm) {
+                    logoutForm.submit();
+                } else {
+                    console.error("❌ Error: logoutForm not found in the DOM.");
+                }
+            }, sessionTimeout);
+        }
+
+        // Detect user activity (mouse movement, keypress)
+        document.addEventListener("mousemove", resetLogoutTimer);
+        document.addEventListener("keydown", resetLogoutTimer);
+
+        // Start the timer
+        resetLogoutTimer();
+    });
+</script>
 

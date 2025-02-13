@@ -6,7 +6,7 @@ namespace BookwormsOnline_Trial4.Models.ViewModels
     public class LoginViewModel
     {
         [Required(ErrorMessage = "Email is required.")]
-        [DataType(DataType.EmailAddress)]
+        [EmailAddress(ErrorMessage = "Invalid email format.")]
         public string Email { get; set; }
 
         [Required(ErrorMessage = "Password is required.")]
@@ -15,6 +15,5 @@ namespace BookwormsOnline_Trial4.Models.ViewModels
 
         public bool RememberMe { get; set; }
 
-        // New property to store login erro
     }
 }

@@ -13,20 +13,33 @@
 
 
             <form asp-controller="Home" asp-action="Login" method="post">
+
+                <!-- 🔹 Display Error Messages Here -->
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <p>@error.ErrorMessage</p>
+                        }
+                    </div>
+                }
+                
+                
                 <div class="mb-3">
                     <label class="form-label" asp-for="Email">Email Address</label>
-                    <input type="text" asp-for="Email" class="form-control" />
+                    <input type="text" asp-for="Email" class="form-control"/>
                     <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label" asp-for="Password">Password</label>
-                    <input type="password" asp-for="Password" class="form-control" />
+                    <input type="password" asp-for="Password" class="form-control"/>
                     <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3 form-check">
-                    <input type="checkbox" asp-for="RememberMe" class="form-check-input" />
+                    <input type="checkbox" asp-for="RememberMe" class="form-check-input"/>
                     <label class="form-check-label" asp-for="RememberMe">Remember Me?</label>
                 </div>
 

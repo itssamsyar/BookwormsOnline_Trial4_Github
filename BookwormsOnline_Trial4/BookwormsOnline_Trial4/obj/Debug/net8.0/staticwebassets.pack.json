@@ -245,6 +245,58 @@
       "PackagePath": "staticwebassets/lib/jquery/dist/jquery.min.map"
     },
     {
+      "Id": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/uploads/05cba48f-8150-4b4a-b94e-8d1fac4522a1.jpg",
+      "PackagePath": "staticwebassets/uploads/05cba48f-8150-4b4a-b94e-8d1fac4522a1.jpg"
+    },
+    {
+      "Id": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/uploads/1e549032-c97c-461b-ad67-9e93bfdb20bc.jpg",
+      "PackagePath": "staticwebassets/uploads/1e549032-c97c-461b-ad67-9e93bfdb20bc.jpg"
+    },
+    {
+      "Id": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/uploads/2662a344-5367-41f1-8829-db1b4314be56.jpg",
+      "PackagePath": "staticwebassets/uploads/2662a344-5367-41f1-8829-db1b4314be56.jpg"
+    },
+    {
+      "Id": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/uploads/2aa2eef8-1e63-4c3c-925f-0c468dc88eb8.jpg",
+      "PackagePath": "staticwebassets/uploads/2aa2eef8-1e63-4c3c-925f-0c468dc88eb8.jpg"
+    },
+    {
+      "Id": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/uploads/563ed65f-afc5-41a3-89ea-8860d37ad4a6.jpg",
+      "PackagePath": "staticwebassets/uploads/563ed65f-afc5-41a3-89ea-8860d37ad4a6.jpg"
+    },
+    {
+      "Id": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/uploads/6bb7f76c-a1f5-4f37-af7b-a5f6387a936b.jpg",
+      "PackagePath": "staticwebassets/uploads/6bb7f76c-a1f5-4f37-af7b-a5f6387a936b.jpg"
+    },
+    {
+      "Id": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/uploads/73113ded-ad14-4bb4-8e4e-37daa57cef3f.jpg",
+      "PackagePath": "staticwebassets/uploads/73113ded-ad14-4bb4-8e4e-37daa57cef3f.jpg"
+    },
+    {
+      "Id": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/uploads/7950fd2c-ae0a-4edb-b982-5bf3b6079eb0.jpg",
+      "PackagePath": "staticwebassets/uploads/7950fd2c-ae0a-4edb-b982-5bf3b6079eb0.jpg"
+    },
+    {
+      "Id": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/uploads/7b6462b7-2868-43db-a059-90c35511f2cd.jpg",
+      "PackagePath": "staticwebassets/uploads/7b6462b7-2868-43db-a059-90c35511f2cd.jpg"
+    },
+    {
+      "Id": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/uploads/bb3bb909-7896-489e-88dc-0da67b13bb6a.jpg",
+      "PackagePath": "staticwebassets/uploads/bb3bb909-7896-489e-88dc-0da67b13bb6a.jpg"
+    },
+    {
+      "Id": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/uploads/e9861167-c61b-4756-b85f-a7fff225fb41.jpg",
+      "PackagePath": "staticwebassets/uploads/e9861167-c61b-4756-b85f-a7fff225fb41.jpg"
+    },
+    {
+      "Id": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/uploads/ea23f329-d3f3-4590-980e-b8d32438c784.jpg",
+      "PackagePath": "staticwebassets/uploads/ea23f329-d3f3-4590-980e-b8d32438c784.jpg"
+    },
+    {
+      "Id": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/uploads/fad72526-c40b-4358-a48e-ea2ae98d6725.jpg",
+      "PackagePath": "staticwebassets/uploads/fad72526-c40b-4358-a48e-ea2ae98d6725.jpg"
+    },
+    {
       "Id": "obj/Debug/net8.0/staticwebassets/msbuild.BookwormsOnline_Trial4.Microsoft.AspNetCore.StaticWebAssets.props",
       "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
     },

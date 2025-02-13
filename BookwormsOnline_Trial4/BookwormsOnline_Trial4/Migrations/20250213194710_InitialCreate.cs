@@ -35,6 +35,15 @@ namespace BookwormsOnline_Trial4.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "varchar(255)", nullable: false),
+                    FirstName = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    LastName = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                    EncryptedCreditCard = table.Column<string>(type: "longtext", nullable: false),
+                    BillingAddress = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false),
+                    ShippingAddress = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false),
+                    PhotoPath = table.Column<string>(type: "longtext", nullable: false),
+                    OldPasswordHash1 = table.Column<string>(type: "longtext", nullable: true),
+                    OldPasswordHash2 = table.Column<string>(type: "longtext", nullable: true),
+                    UpdatedPasswordTime = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     UserName = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true),
