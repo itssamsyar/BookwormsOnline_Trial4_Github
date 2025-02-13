@@ -10,6 +10,7 @@ using BookwormsOnline_Trial4.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace BookwormsOnline_Trial4.Controllers;
 
@@ -34,6 +35,9 @@ public class HomeController : Controller
     // For the Database
     private readonly AuthDbContext _context;
 
+    // For the Email
+    private readonly IEmailSender _emailSender;
+
     public HomeController(ILogger<HomeController> logger,
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
@@ -41,7 +45,8 @@ public class HomeController : Controller
         IDataProtectionProvider provider,
         IHttpContextAccessor httpContextAccessor,
         AuthDbContext context,
-        EncryptionService encryptionService)
+        EncryptionService encryptionService,
+        IEmailSender emailSender)
     {
         _logger = logger;
         _userManager = userManager;
@@ -51,6 +56,7 @@ public class HomeController : Controller
         contxt = httpContextAccessor;
         _context = context;
         _encryptionService = encryptionService;
+        _emailSender = emailSender;
     }
 
 
@@ -187,6 +193,23 @@ public class HomeController : Controller
         return View();
     }
 
+
+    // Loads the /Home/ForgotPassword.cshtml
+    [HttpGet]
+    public IActionResult ForgotPassword()
+    {
+        return View();
+    }
+
+
+    // Loads the /Home/ResetPassword.cshtml
+    [HttpGet]
+    public IActionResult ResetPassword(string token, string email)
+    {
+        if (token == null || email == null) return BadRequest("Invalid token.");
+        return View(new ResetPasswordViewModel { Token = token, Email = email });
+    }
+
     // Loads the Error View
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
@@ -212,6 +235,135 @@ public class HomeController : Controller
 
 
     // ALL MY ACTION METHODS
+
+    // Action Method for Forgot Password
+    [HttpPost]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        if (user == null)
+        {
+            ViewBag.Message = "If the email exists, a reset link has been sent.";
+            return View();
+        }
+
+        // Generate Reset Token
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var resetLink = Url.Action("ResetPassword", "Home", new { token, email = model.Email }, Request.Scheme);
+
+        // Send Email
+        await _emailSender.SendEmailAsync(model.Email, "Reset Password",
+            $"Click <a href='{resetLink}'>here</a> to reset your password.");
+
+        ViewBag.Message = "If the email exists, a reset link has been sent.";
+        return View();
+    }
+
+    
+    
+    // Action Method for Reset Password
+    [HttpPost]
+    public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+    {
+        Console.WriteLine("🔄 Reset Password Request Initiated");
+
+        if (!ModelState.IsValid)
+        {
+            Console.WriteLine("❌ ModelState validation failed.");
+            return View(model);
+        }
+
+        // ✅ Retrieve user
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        if (user == null)
+        {
+            Console.WriteLine("❌ User not found.");
+            return RedirectToAction("Index");
+        }
+
+        // ✅ Check if the password reset token is valid
+        var isTokenValid =
+            await _userManager.VerifyUserTokenAsync(user, TokenOptions.DefaultProvider, "ResetPassword", model.Token);
+        if (!isTokenValid)
+        {
+            Console.WriteLine("❌ Invalid or expired password reset token.");
+            ModelState.AddModelError("", "Invalid or expired reset password token.");
+            return View(model);
+        }
+
+        // ✅ Password Age Policy: Check if the password was changed recently
+        double timeElapsed = (DateTime.UtcNow - user.UpdatedPasswordTime).TotalMinutes;
+        Console.WriteLine($"⏳ Time since last password change: {timeElapsed} minutes");
+
+        if (timeElapsed < 2) // Adjust the time limit as needed
+        {
+            Console.WriteLine("❌ User attempted to reset password too early.");
+            ModelState.AddModelError("", "You are resetting your password too early. Try again later.");
+            return View(model);
+        }
+
+        // ✅ Verify if new password matches the old password
+        var passwordHasher = new PasswordHasher<ApplicationUser>();
+        bool isSameAsCurrentPassword =
+            passwordHasher.VerifyHashedPassword(user, user.PasswordHash, model.NewPassword) ==
+            PasswordVerificationResult.Success;
+
+        if (isSameAsCurrentPassword)
+        {
+            Console.WriteLine("❌ New password cannot be the same as the current password.");
+            ModelState.AddModelError("", "New password cannot be the same as your current password.");
+            return View(model);
+        }
+
+        // ✅ Password Reuse Policy: Prevent reusing the last two passwords
+        bool isSameAsOldPassword1 = user.OldPasswordHash1 != null &&
+                                    passwordHasher.VerifyHashedPassword(user, user.OldPasswordHash1,
+                                        model.NewPassword) == PasswordVerificationResult.Success;
+
+        bool isSameAsOldPassword2 = user.OldPasswordHash2 != null &&
+                                    passwordHasher.VerifyHashedPassword(user, user.OldPasswordHash2,
+                                        model.NewPassword) == PasswordVerificationResult.Success;
+
+        Console.WriteLine($"🔍 Checking against Old Password 1: {user.OldPasswordHash1}");
+        Console.WriteLine($"🔍 Checking against Old Password 2: {user.OldPasswordHash2}");
+        Console.WriteLine($"🔍 Is same as Old Password 1? {isSameAsOldPassword1}");
+        Console.WriteLine($"🔍 Is same as Old Password 2? {isSameAsOldPassword2}");
+
+        if (isSameAsOldPassword1 || isSameAsOldPassword2)
+        {
+            Console.WriteLine("❌ New password matches one of the last two passwords.");
+            ModelState.AddModelError("", "New password cannot be the same as your previous 2 passwords.");
+            return View(model);
+        }
+
+        // ✅ Reset the password securely
+        var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+        if (!result.Succeeded)
+        {
+            Console.WriteLine("❌ Password reset failed due to validation errors.");
+            foreach (var error in result.Errors)
+            {
+                Console.WriteLine($"🔹 Identity Error: {error.Description}");
+                ModelState.AddModelError("", error.Description);
+            }
+
+            return View(model);
+        }
+
+        // ✅ Update password history and timestamp
+        string newPasswordHash = passwordHasher.HashPassword(user, model.NewPassword);
+        user.OldPasswordHash2 = user.OldPasswordHash1; // Move previous password back
+        user.OldPasswordHash1 = newPasswordHash; // Store the latest password
+        user.UpdatedPasswordTime = DateTime.UtcNow;
+
+        await _userManager.UpdateAsync(user);
+
+        Console.WriteLine("✅ Password reset successfully! Redirecting to Login page.");
+        TempData["SuccessMessage"] = "Password has been reset successfully!";
+        return RedirectToAction("Login");
+    }
 
 
     // Action Method for Register Button
@@ -487,7 +639,7 @@ public class HomeController : Controller
             // ✅ Store session data
             HttpContext.Session.SetString("UserId", user.Id);
             HttpContext.Session.SetString("AuthToken", newAuthToken);
-        
+
             // ✅ Store the "LoggedIn" session variable here
             HttpContext.Session.SetString("LoggedIn", user.Email);
 
@@ -616,7 +768,7 @@ public class HomeController : Controller
     public async Task<IActionResult> ConfirmLogout()
     {
         Console.WriteLine("🚪 Logging out user...");
-        
+
         // ✅ Get user from session
         var userId = HttpContext.Session.GetString("UserId");
 
