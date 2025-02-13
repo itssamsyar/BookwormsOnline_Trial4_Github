@@ -1,4 +1,5 @@
 using BookwormsOnline_Trial4.Models.DbContext;
+using BookwormsOnline_Trial4.Services;
 using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,12 @@ builder.Services.AddSession(options =>
 // ADD THE DBCONTEXT AND IDENTITY
 builder.Services.AddDbContext<AuthDbContext>();
 builder.Services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<AuthDbContext>();
+
+// ADD CAPTCHA SERVICE
+// Register CaptchaService
+builder.Services.AddHttpClient<CaptchaService>();
+builder.Services.AddScoped<CaptchaService>();
+
 
 var app = builder.Build();
 

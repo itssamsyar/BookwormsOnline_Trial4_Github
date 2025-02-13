@@ -1,16 +1,31 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using BookwormsOnline_Trial4.Models;
+using Microsoft.AspNetCore.Identity;
+using BookwormsOnline_Trial4.Models.ViewModels;
+using BookwormsOnline_Trial4.Services;
 
 namespace BookwormsOnline_Trial4.Controllers;
 
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
+    
+    // For my Register
+    private readonly UserManager<IdentityUser> _userManager;
+    private readonly SignInManager<IdentityUser> _signInManager;
+    
+    
+    // For the Google ReCAPTCHA V3
+    private readonly CaptchaService _captchaService;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(ILogger<HomeController> logger, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, CaptchaService captchaService)
     {
         _logger = logger;
+        _userManager = userManager;
+        _signInManager = signInManager;
+        _captchaService = captchaService;
+        
     }
     
     
@@ -74,8 +89,62 @@ public class HomeController : Controller
     
     // ALL MY ACTION METHODS
     
+    [HttpPost]
+    public async Task<IActionResult> Register(RegisterViewModel model)
+    {
+        // Log received token for debugging
+        Console.WriteLine("Received reCAPTCHA Token: " + model.gRecaptchaResponse);
+
+        // Validate reCAPTCHA first
+        bool isCaptchaValid = await _captchaService.ValidateCaptchaAsync(model.gRecaptchaResponse);
+        Console.WriteLine("✅ Is Captcha Valid?: " + isCaptchaValid);
+
+        if (!isCaptchaValid)
+        {
+            Console.WriteLine("❌ reCAPTCHA Validation Failed");
+            ModelState.AddModelError("", "Invalid Captcha, please try again.");
+            return View(model);
+        }
+
+        Console.WriteLine("✅ reCAPTCHA Passed, Continuing Registration");
+        
+
+        // Validate other form fields
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        // Create a new user object from IdentityUser
+        var user = new IdentityUser
+        {
+            UserName = model.Email,
+            Email = model.Email
+        };
+
+        // Add the new user to the database, in the table, AspNetUser
+        var result = await _userManager.CreateAsync(user, model.Password);
+
+        if (result.Succeeded)
+        {
+            await _signInManager.SignInAsync(user, false);
+            return RedirectToAction("Home", "Home"); // Redirect after successful registration
+        }
+
+        // Handle registration errors
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError("", error.Description);
+        }
+
+        return View(model);
+    }
     
-    // Action Method for Login
+    // Action Method for Login Button
+    
+   
+    
+    // Action Method for Logout Button
     
     
     
