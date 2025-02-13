@@ -1,7 +1,43 @@
-
+@model BookwormsOnline_Trial4.Models.ViewModels.LoginViewModel
 
 @{
-    ViewData["Title"] = "Login Page";
+    ViewData["Title"] = "Login";
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center align-items-center">
+        <div class="col-sm-12 col-md-10 col-lg-6">
+            <h1 class="mb-3">Login</h1>
+
+           
+
+
+            <form asp-controller="Home" asp-action="Login" method="post">
+                <div class="mb-3">
+                    <label class="form-label" asp-for="Email">Email Address</label>
+                    <input type="text" asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" asp-for="Password">Password</label>
+                    <input type="password" asp-for="Password" class="form-control" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" asp-for="RememberMe" class="form-check-input" />
+                    <label class="form-check-label" asp-for="RememberMe">Remember Me?</label>
+                </div>
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

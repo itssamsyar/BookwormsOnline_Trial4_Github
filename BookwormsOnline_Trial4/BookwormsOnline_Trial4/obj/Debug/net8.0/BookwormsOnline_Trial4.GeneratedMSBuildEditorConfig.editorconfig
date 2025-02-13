@@ -18,12 +18,28 @@ build_property.GenerateRazorMetadataSourceChecksumAttributes =
 build_property.MSBuildProjectDirectory = /Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4
 build_property._RazorSourceGeneratorDebug = 
 
+[/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/Views/Home/Home.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9Ib21lLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/Views/Home/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9Mb2dpbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/Views/Home/Logout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9Mb2dvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/Views/Home/Privacy.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9Qcml2YWN5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/Views/Home/Register.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9SZWdpc3Rlci5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/Views/Shared/Error.cshtml]

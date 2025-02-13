@@ -1,0 +1,17 @@
+@{
+    ViewData["Title"] = "Logout";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center align-items-center">
+        <div class="col-sm-12 col-md-10 col-lg-6">
+            <h1 class="mb-3">Logout</h1>
+            <p>Are you sure you want to logout?</p>
+
+            <form method="post">
+                <button type="submit" class="btn btn-primary" asp-action="ConfirmLogout">Yes</button>
+                <button type="submit" class="btn btn-light ml-3 border-dark" asp-action="CancelLogout">No</button>
+            </form>
+        </div>
+    </div>
+</div>

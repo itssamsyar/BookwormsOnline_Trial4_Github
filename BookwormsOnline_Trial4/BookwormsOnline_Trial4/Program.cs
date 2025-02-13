@@ -1,7 +1,35 @@
+using BookwormsOnline_Trial4.Models.DbContext;
+using BookwormsOnline_Trial4.Services;
+using Microsoft.AspNetCore.Identity;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// IMPLEMENT THE SESSION STUFF
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromSeconds(30);
+});
+
+
+// ADD THE DBCONTEXT AND IDENTITY
+builder.Services.AddDbContext<AuthDbContext>();
+builder.Services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<AuthDbContext>();
+
+// FORCE THE USER TO GO TO LOGIN PAGE IF NOT LOGGED IN
+builder.Services.ConfigureApplicationCookie(Config =>
+{
+    Config.LoginPath = "/Home/Login";
+});
+
+// ADD CAPTCHA SERVICE
+builder.Services.AddHttpClient<CaptchaService>();
+builder.Services.AddScoped<CaptchaService>();
+
 
 var app = builder.Build();
 
@@ -16,7 +44,16 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+
+// SESSION STUFF
+app.UseSession();
+
+
 app.UseRouting();
+
+
+// FOR THE DBCONTEXT, ADD AUTHENTICATION
+app.UseAuthentication();
 
 app.UseAuthorization();
 
