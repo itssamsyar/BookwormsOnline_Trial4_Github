@@ -471,7 +471,8 @@ public class HomeController : Controller
             return View(model);
         }
         
-        Console.WriteLine("The stuff is valid!");
+        Console.WriteLine($"🔎 Checking user login for email: {model.Email}");
+
         
         // ✅ Query user using parameterized query (prevents SQL injection)
         var user = await _userManager.Users
@@ -484,6 +485,8 @@ public class HomeController : Controller
             ModelState.AddModelError("", "Username or Password incorrect");
             return View(model);
         }
+        
+        Console.WriteLine("✅ User found in database!");
 
         var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
 
@@ -509,7 +512,8 @@ public class HomeController : Controller
             return RedirectToAction("Home", "Home");
         }
 
-        ModelState.AddModelError("", "Username or Password incorrect");
+        Console.WriteLine("❌ Login failed: Incorrect password.");
+        ModelState.AddModelError("", "Invalid email or password.");
         return View(model);
     }
     
