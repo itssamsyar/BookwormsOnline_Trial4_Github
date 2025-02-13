@@ -16,28 +16,28 @@ namespace BookwormsOnline_Trial4.Controllers;
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
-    
+
     // For my Register
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
-    
+
     // For the Google ReCAPTCHA V3
     private readonly CaptchaService _captchaService;
-    
+
     // For Encrypting CreditCard
     private readonly IDataProtector _protector;
     private readonly EncryptionService _encryptionService;
-    
+
     // For Session Cookies
     private readonly IHttpContextAccessor contxt;
-    
+
     // For the Database
     private readonly AuthDbContext _context;
 
-    public HomeController(ILogger<HomeController> logger, 
-        UserManager<ApplicationUser> userManager, 
-        SignInManager<ApplicationUser> signInManager, 
-        CaptchaService captchaService, 
+    public HomeController(ILogger<HomeController> logger,
+        UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager,
+        CaptchaService captchaService,
         IDataProtectionProvider provider,
         IHttpContextAccessor httpContextAccessor,
         AuthDbContext context,
@@ -51,19 +51,18 @@ public class HomeController : Controller
         contxt = httpContextAccessor;
         _context = context;
         _encryptionService = encryptionService;
-        
     }
-    
-    
+
+
     // ALL MY VIEWS
-    
-    
+
+
     // Loads the /Home/Register.cshtml
     public IActionResult Register()
     {
         return View();
     }
-    
+
     // Loads the /Home/Login.cshtml
     [HttpGet]
     public IActionResult Login()
@@ -71,25 +70,24 @@ public class HomeController : Controller
         return View(new LoginViewModel()); // Ensure a fresh instance is passed
     }
 
-    
+
     // Loads the /Home/Home.cshtml (logged in view)
     [Authorize]
     public async Task<IActionResult> Home([FromServices] EncryptionService encryptionService)
     {
-        
         // ✅ Prevent caching so that pressing "Back" doesn’t load the old page
         Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
         Response.Headers["Pragma"] = "no-cache";
         Response.Headers["Expires"] = "0";
-        
-        
+
+
         string userId = HttpContext.Session.GetString("UserId");
         string sessionAuthToken = HttpContext.Session.GetString("AuthToken");
         string cookieAuthToken = Request.Cookies["AuthToken"];
 
         // ✅ Validate Session & Cookie Authentication
-        if (string.IsNullOrEmpty(userId) || 
-            string.IsNullOrEmpty(sessionAuthToken) || 
+        if (string.IsNullOrEmpty(userId) ||
+            string.IsNullOrEmpty(sessionAuthToken) ||
             string.IsNullOrEmpty(cookieAuthToken) ||
             sessionAuthToken != cookieAuthToken)
         {
@@ -108,7 +106,7 @@ public class HomeController : Controller
             Console.WriteLine("❌ User not found in database!");
             return RedirectToAction("Login", "Home");
         }
-        
+
         // ✅ Get encrypted credit card from the database
         string decryptedCreditCard = "Not Available";
         try
@@ -122,7 +120,7 @@ public class HomeController : Controller
         {
             Console.WriteLine($"❌ Error decrypting credit card: {ex.Message}");
         }
-        
+
         ViewBag.User = new
         {
             user.FirstName,
@@ -143,15 +141,39 @@ public class HomeController : Controller
 
         return View();
     }
-    
-    
+
+
     // Loads the /Home/Index.cshtml
     public IActionResult Index()
     {
         return RedirectToAction("Login", "Home");
     }
 
-    
+
+    // Loads the /Home/ChangePassword.cshtml
+    [Authorize]
+    public IActionResult ChangePassword()
+    {
+        string userId = HttpContext.Session.GetString("UserId");
+        string sessionAuthToken = HttpContext.Session.GetString("AuthToken");
+        string cookieAuthToken = Request.Cookies["AuthToken"];
+
+        // ✅ Validate session & cookie authentication
+        if (string.IsNullOrEmpty(userId) ||
+            string.IsNullOrEmpty(sessionAuthToken) ||
+            string.IsNullOrEmpty(cookieAuthToken) ||
+            sessionAuthToken != cookieAuthToken)
+        {
+            Console.WriteLine("❌ Invalid session. Redirecting to login...");
+            return RedirectToAction("Login", "Home");
+        }
+
+        Console.WriteLine($"✅ Change Password Page Loaded for UserID: {userId}");
+
+        return View();
+    }
+
+
     // Load the /Home/Logout.cshtml
     public IActionResult Logout()
     {
@@ -164,31 +186,15 @@ public class HomeController : Controller
     {
         return View();
     }
-    
+
     // Loads the Error View
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
     // METHOD TO SANITIZE INPUT
     private string SanitizeInput(string input)
     {
@@ -204,12 +210,10 @@ public class HomeController : Controller
         return HttpUtility.HtmlEncode(input);
     }
 
-    
-    
-    
+
     // ALL MY ACTION METHODS
-    
-    
+
+
     // Action Method for Register Button
     [HttpPost]
     public async Task<IActionResult> Register(RegisterViewModel model)
@@ -229,7 +233,7 @@ public class HomeController : Controller
         }
 
         Console.WriteLine("✅ reCAPTCHA Passed, Continuing Registration");
-        
+
         // File validation for the uploaded photo
         if (model.Photo != null)
         {
@@ -267,10 +271,6 @@ public class HomeController : Controller
             Console.WriteLine("⚠ No profile photo uploaded.");
         }
 
-        
-        
-        
-        
 
         // Validate other form fields
         if (!ModelState.IsValid)
@@ -283,13 +283,14 @@ public class HomeController : Controller
                     Console.WriteLine($"⚠ Field: {modelState.Key}, Error: {error.ErrorMessage}");
                 }
             }
+
             return View(model);
         }
-        
-        
+
+
         Console.WriteLine("✅ Model validation passed");
-        
-        
+
+
         Console.WriteLine("🛠️ Sanitizing Inputs Now...");
 
 // ✅ Sanitize Inputs to Prevent XSS
@@ -328,13 +329,13 @@ public class HomeController : Controller
 
         Console.WriteLine("✅ Sanitization Complete!");
 
-        
+
         Console.WriteLine("🛠 Creating new ApplicationUser object...");
-        
+
         // Create a new user object from ApplicationUser
         var user = new ApplicationUser
         {
-            UserName = model.Email,  // Identity requires a unique username, using email as default
+            UserName = model.Email, // Identity requires a unique username, using email as default
             Email = model.Email,
             PhoneNumber = model.PhoneNumber,
             FirstName = model.FirstName,
@@ -342,10 +343,10 @@ public class HomeController : Controller
             BillingAddress = model.BillingAddress,
             ShippingAddress = model.ShippingAddress
         };
-        
+
         Console.WriteLine($"✅ Created user object: {user.Email}");
 
-        
+
         // ✅ Encrypt and store credit card number using EncryptionService
         try
         {
@@ -361,7 +362,7 @@ public class HomeController : Controller
             return View(model);
         }
 
-        
+
         // Define uploads directory
         var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
 
@@ -395,14 +396,8 @@ public class HomeController : Controller
         {
             Console.WriteLine("⚠ No profile photo uploaded.");
         }
-        
-        
-        
-        
-        
-        
-        
-        
+
+
         // Check if the email already exists
         var existingUser = await _userManager.FindByEmailAsync(model.Email);
         if (existingUser != null)
@@ -413,13 +408,6 @@ public class HomeController : Controller
         }
 
         Console.WriteLine("✅ Email is unique, proceeding with registration...");
-        
-        
-        
-        
-        
-        
-        
 
 
         // Add the new user to the AspNetUser, salt hash the password
@@ -441,23 +429,18 @@ public class HomeController : Controller
 
         return View(model);
     }
-    
-    
-    
-    
-    
-    
+
+
     // Action Method for Login Button
     [HttpPost]
     public async Task<IActionResult> Login(LoginViewModel model)
     {
-        
         Console.WriteLine("🔍 Login POST method hit!");
-        
+
         if (!ModelState.IsValid)
         {
             Console.WriteLine("❌ ModelState is Invalid!");
-            
+
             foreach (var error in ModelState)
             {
                 foreach (var subError in error.Value.Errors)
@@ -465,27 +448,26 @@ public class HomeController : Controller
                     Console.WriteLine($"❌ Validation Error for {error.Key}: {subError.ErrorMessage}");
                 }
             }
-            
-        
+
 
             return View(model);
         }
-        
+
         Console.WriteLine($"🔎 Checking user login for email: {model.Email}");
 
-        
+
         // ✅ Query user using parameterized query (prevents SQL injection)
         var user = await _userManager.Users
             .Where(u => u.Email == model.Email)
             .FirstOrDefaultAsync();
-        
+
         if (user == null)
         {
             Console.WriteLine("❌ User not found!");
             ModelState.AddModelError("", "Username or Password incorrect");
             return View(model);
         }
-        
+
         Console.WriteLine("✅ User found in database!");
 
         var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
@@ -516,9 +498,111 @@ public class HomeController : Controller
         ModelState.AddModelError("", "Invalid email or password.");
         return View(model);
     }
-    
-    
-    
+
+
+    [Authorize]
+    [HttpPost]
+    public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+    {
+        Console.WriteLine("🔄 Change Password Request Initiated");
+
+        if (!ModelState.IsValid)
+        {
+            Console.WriteLine("❌ ModelState validation failed.");
+            return View(model);
+        }
+
+        string userId = HttpContext.Session.GetString("UserId");
+
+        // ✅ Retrieve user
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            Console.WriteLine("❌ User not found in database.");
+            ModelState.AddModelError("", "User not found.");
+            return View(model);
+        }
+
+        // ✅ Check if password was changed within the last 5 minutes
+        double timeElapsed = (DateTime.UtcNow - user.UpdatedPasswordTime).TotalMinutes;
+
+        Console.WriteLine($"⏳ Time since last password change: {timeElapsed} minutes");
+
+        if (timeElapsed < 2)
+        {
+            Console.WriteLine("❌ User attempted to change password too early.");
+            ModelState.AddModelError("", "You are changing password too early. Try again later.");
+            return View(model);
+        }
+
+        // ✅ Verify old password
+        var passwordCheck = await _userManager.CheckPasswordAsync(user, model.OldPassword);
+        if (!passwordCheck)
+        {
+            Console.WriteLine("❌ Incorrect old password entered.");
+            ModelState.AddModelError("", "Wrong old password.");
+            return View(model);
+        }
+
+        // ✅ Hashing service from UserManager
+        var passwordHasher = new PasswordHasher<ApplicationUser>();
+
+// ✅ // ✅ Check if new password matches any of the last two stored passwords
+        bool isSameAsOldPassword1 = user.OldPasswordHash1 != null &&
+                                    passwordHasher.VerifyHashedPassword(user, user.OldPasswordHash1,
+                                        model.NewPassword) == PasswordVerificationResult.Success;
+
+        bool isSameAsOldPassword2 = user.OldPasswordHash2 != null &&
+                                    passwordHasher.VerifyHashedPassword(user, user.OldPasswordHash2,
+                                        model.NewPassword) == PasswordVerificationResult.Success;
+
+// ✅ Log debug messages
+        Console.WriteLine($"🔍 Checking against Old Password 1: {user.OldPasswordHash1}");
+        Console.WriteLine($"🔍 Checking against Old Password 2: {user.OldPasswordHash2}");
+        Console.WriteLine($"🔍 Is same as Old Password 1? {isSameAsOldPassword1}");
+        Console.WriteLine($"🔍 Is same as Old Password 2? {isSameAsOldPassword2}");
+
+        if (isSameAsOldPassword1 || isSameAsOldPassword2)
+        {
+            Console.WriteLine("❌ New password matches one of the last two passwords.");
+            ModelState.AddModelError("", "New password cannot be the same as your previous 2 passwords.");
+            return View(model);
+        }
+
+// ✅ Hash and store the new password
+        string newPasswordHash = passwordHasher.HashPassword(user, model.NewPassword);
+
+        // ✅ Update password securely
+        var changeResult = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+        if (!changeResult.Succeeded)
+        {
+            Console.WriteLine("❌ Password change failed due to validation errors.");
+            foreach (var error in changeResult.Errors)
+            {
+                Console.WriteLine($"🔹 Identity Error: {error.Description}");
+                ModelState.AddModelError("", error.Description);
+            }
+
+            return View(model);
+        }
+
+        // ✅ Update password history and timestamp
+        user.OldPasswordHash2 = user.OldPasswordHash1; // Move previous password back
+        user.OldPasswordHash1 = newPasswordHash; // Store the latest password
+        user.UpdatedPasswordTime = DateTime.UtcNow;
+
+        await _userManager.UpdateAsync(user);
+
+        // ✅ Re-sign the user after password change
+        await _signInManager.SignOutAsync();
+        await _signInManager.PasswordSignInAsync(user, model.NewPassword, isPersistent: false, lockoutOnFailure: false);
+
+        Console.WriteLine("✅ Password changed successfully! Redirecting to Home page.");
+        TempData["SuccessMessage"] = "Password changed successfully!";
+        return RedirectToAction("Home", "Home");
+    }
+
+
     // Action Method for Logout
     [HttpPost]
     public async Task<IActionResult> ConfirmLogout()
@@ -561,29 +645,11 @@ public class HomeController : Controller
         return RedirectToAction("Login", "Home");
     }
 
-    
+
     // Action Method for CancelLogoutButton
     [HttpPost]
     public IActionResult CancelLogout()
     {
         return RedirectToAction("Home", "Home");
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
- 
-
-    
 }
