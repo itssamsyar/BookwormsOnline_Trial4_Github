@@ -16,6 +16,7 @@ public class HomeController : Controller
     
     // ALL MY VIEWS
     
+    
     // Loads the /Home/Register.cshtml
     public IActionResult Register()
     {
@@ -67,7 +68,15 @@ public class HomeController : Controller
     
     
     
+    
+    
+    
+    
     // ALL MY ACTION METHODS
+    
+    
+    // Action Method for Login
+    
     
     
     
