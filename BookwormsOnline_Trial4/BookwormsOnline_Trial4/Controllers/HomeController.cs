@@ -1,11 +1,13 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using BookwormsOnline_Trial4.Models;
+using BookwormsOnline_Trial4.Models.DbContext;
 using Microsoft.AspNetCore.Identity;
 using BookwormsOnline_Trial4.Models.ViewModels;
 using BookwormsOnline_Trial4.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.EntityFrameworkCore;
 
 namespace BookwormsOnline_Trial4.Controllers;
 
@@ -22,14 +24,28 @@ public class HomeController : Controller
     
     // For Encrypting CreditCard
     private readonly IDataProtector _protector;
+    
+    // For Session Cookies
+    private readonly IHttpContextAccessor contxt;
+    
+    // For the Database
+    private readonly AuthDbContext _context;
 
-    public HomeController(ILogger<HomeController> logger, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, CaptchaService captchaService, IDataProtectionProvider provider)
+    public HomeController(ILogger<HomeController> logger, 
+        UserManager<ApplicationUser> userManager, 
+        SignInManager<ApplicationUser> signInManager, 
+        CaptchaService captchaService, 
+        IDataProtectionProvider provider,
+        IHttpContextAccessor httpContextAccessor,
+        AuthDbContext context)
     {
         _logger = logger;
         _userManager = userManager;
         _signInManager = signInManager;
         _captchaService = captchaService;
         _protector = provider.CreateProtector("CreditCardProtection");
+        contxt = httpContextAccessor;
+        _context = context;
         
     }
     
@@ -53,16 +69,48 @@ public class HomeController : Controller
     
     // Loads the /Home/Home.cshtml (logged in view)
     [Authorize]
-    public IActionResult Home()
+    public async Task<IActionResult> Home()
     {
-        if (!User.Identity.IsAuthenticated)
+        string userId = HttpContext.Session.GetString("UserId");
+        string sessionAuthToken = HttpContext.Session.GetString("AuthToken");
+        string cookieAuthToken = Request.Cookies["AuthToken"];
+
+        // ✅ Validate Session & Cookie Authentication
+        if (string.IsNullOrEmpty(userId) || 
+            string.IsNullOrEmpty(sessionAuthToken) || 
+            string.IsNullOrEmpty(cookieAuthToken) ||
+            sessionAuthToken != cookieAuthToken)
         {
-            Console.WriteLine("❌ User is NOT authenticated!");
+            Console.WriteLine("❌ Invalid or expired session. Redirecting to login...");
+            return RedirectToAction("Login", "Home");
         }
-        else
+
+        // ✅ Securely retrieve user data using parameterized query
+        var user = await _context.Users
+            .Where(u => u.Id == userId)
+            .Select(u => new 
+            {
+                u.FirstName,
+                u.LastName,
+                u.Email,
+                u.PhoneNumber,
+                u.BillingAddress,
+                u.ShippingAddress,
+                u.PhotoPath
+            })
+            .FirstOrDefaultAsync();
+
+        if (user == null)
         {
-            Console.WriteLine($"✅ User is authenticated: {User.Identity.Name}");
+            Console.WriteLine("❌ User not found in database!");
+            return RedirectToAction("Login", "Home");
         }
+
+        ViewBag.User = user; // Pass user details to the view
+        ViewBag.IsLoggedIn = true;
+        ViewBag.Message = $"Welcome, {user.FirstName} {user.LastName}!";
+
+        Console.WriteLine($"✅ Successfully loaded Home page for {user.Email}");
 
         return View();
     }
@@ -288,13 +336,7 @@ public class HomeController : Controller
         if (result.Succeeded)
         {
             Console.WriteLine("🎉 User created successfully!");
-
-            // Log user sign-in
-            Console.WriteLine($"🔑 Signing in user: {user.Email}");
-            await _signInManager.SignInAsync(user, false);
-            
-            Console.WriteLine("✅ User signed in successfully");
-            return RedirectToAction("Home", "Home"); // Redirect after successful registration
+            return RedirectToAction("Login", "Home"); // Redirect after successful registration
         }
 
         // Handle registration errors
@@ -338,17 +380,44 @@ public class HomeController : Controller
         }
         
         Console.WriteLine("The stuff is valid!");
+        
+        // ✅ Query user using parameterized query (prevents SQL injection)
+        var user = await _userManager.Users
+            .Where(u => u.Email == model.Email)
+            .FirstOrDefaultAsync();
+        
+        if (user == null)
+        {
+            Console.WriteLine("❌ User not found!");
+            ModelState.AddModelError("", "Username or Password incorrect");
+            return View(model);
+        }
 
         var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
 
         if (result.Succeeded)
         {
-            Console.WriteLine($"✅ Login Successful! User: {model.Email}");
+            Console.WriteLine($"✅ Login Successful! User: {user.Email}");
+
+            // ✅ Store session variables
+            HttpContext.Session.SetString("LoggedIn", user.Email);
+            HttpContext.Session.SetString("UserId", user.Id);
+
+            string guid = Guid.NewGuid().ToString();
+            HttpContext.Session.SetString("AuthToken", guid);
+
+            Response.Cookies.Append("AuthToken", guid, new CookieOptions
+            {
+                HttpOnly = true, // Security best practice
+                Secure = true, // Requires HTTPS
+                SameSite = SameSiteMode.Strict, // Helps prevent CSRF
+                Expires = DateTime.UtcNow.AddHours(1) // Expiration time
+            });
+
             return RedirectToAction("Home", "Home");
         }
 
         ModelState.AddModelError("", "Username or Password incorrect");
-
         return View(model);
     }
     
@@ -357,6 +426,15 @@ public class HomeController : Controller
     [HttpPost]
     public async Task<IActionResult> ConfirmLogout()
     {
+        // ✅ Clear session data
+        HttpContext.Session.Clear();
+
+        // ✅ Delete session cookie
+        if (Request.Cookies.ContainsKey("AuthToken"))
+        {
+            Response.Cookies.Delete("AuthToken");
+        }
+
         await _signInManager.SignOutAsync();
         return RedirectToAction("Login");
     }
