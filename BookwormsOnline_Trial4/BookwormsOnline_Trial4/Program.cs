@@ -48,6 +48,9 @@ app.UseStaticFiles();
 // SESSION STUFF
 app.UseSession();
 
+// FOR CUSTOM ERROR PAGES
+app.UseExceptionHandler("/error/500"); 
+app.UseStatusCodePagesWithRedirects("/error/{0}"); 
 
 app.UseRouting();
 

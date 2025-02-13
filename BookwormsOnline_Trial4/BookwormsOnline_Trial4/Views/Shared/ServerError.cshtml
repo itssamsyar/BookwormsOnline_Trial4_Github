@@ -1,0 +1,14 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Internal Server Error";
+}
+
+<h1 class="text-danger">500 - Internal Server Error</h1>
+<p>Oops! Something went wrong on our end.</p>
+
+@if (Model.ShowRequestId)
+{
+    <p><strong>Request ID:</strong> <code>@Model.RequestId</code></p>
+}
+
+<p>Please try again later or contact support.</p>
