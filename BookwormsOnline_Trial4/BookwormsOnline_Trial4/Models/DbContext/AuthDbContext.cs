@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace BookwormsOnline_Trial4.Models.DbContext
 {
-    public class AuthDbContext : IdentityDbContext
+    public class AuthDbContext : IdentityDbContext<ApplicationUser>
     {
         
         private readonly IConfiguration _configuration;

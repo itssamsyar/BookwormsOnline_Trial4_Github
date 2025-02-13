@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "Null6eOpKTXPyMWBqVRopSsWstI+j4iiCmhyImQXd2U=",
+  "Hash": "HcewNCzZ94xF0YUlXIbqbgmzWE4j72RyOl+p/UWz+Yw=",
   "Source": "BookwormsOnline_Trial4",
   "BasePath": "_content/BookwormsOnline_Trial4",
   "Mode": "Default",
@@ -1193,6 +1193,44 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/lib/jquery/LICENSE.txt"
+    },
+    {
+      "Identity": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/uploads/7950fd2c-ae0a-4edb-b982-5bf3b6079eb0.jpg",
+      "SourceId": "BookwormsOnline_Trial4",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/",
+      "BasePath": "_content/BookwormsOnline_Trial4",
+      "RelativePath": "uploads/7950fd2c-ae0a-4edb-b982-5bf3b6079eb0.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/uploads/7950fd2c-ae0a-4edb-b982-5bf3b6079eb0.jpg"
+    },
+    {
+      "Identity": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/uploads/bb3bb909-7896-489e-88dc-0da67b13bb6a.jpg",
+      "SourceId": "BookwormsOnline_Trial4",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/",
+      "BasePath": "_content/BookwormsOnline_Trial4",
+      "RelativePath": "uploads/bb3bb909-7896-489e-88dc-0da67b13bb6a.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/uploads/bb3bb909-7896-489e-88dc-0da67b13bb6a.jpg"
     }
   ]
 }

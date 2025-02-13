@@ -245,6 +245,14 @@
       "PackagePath": "staticwebassets/lib/jquery/dist/jquery.min.map"
     },
     {
+      "Id": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/uploads/7950fd2c-ae0a-4edb-b982-5bf3b6079eb0.jpg",
+      "PackagePath": "staticwebassets/uploads/7950fd2c-ae0a-4edb-b982-5bf3b6079eb0.jpg"
+    },
+    {
+      "Id": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/uploads/bb3bb909-7896-489e-88dc-0da67b13bb6a.jpg",
+      "PackagePath": "staticwebassets/uploads/bb3bb909-7896-489e-88dc-0da67b13bb6a.jpg"
+    },
+    {
       "Id": "obj/Debug/net8.0/staticwebassets/msbuild.BookwormsOnline_Trial4.Microsoft.AspNetCore.StaticWebAssets.props",
       "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
     },

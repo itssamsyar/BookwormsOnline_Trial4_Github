@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using BookwormsOnline_Trial4.Models.ViewModels;
 using BookwormsOnline_Trial4.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace BookwormsOnline_Trial4.Controllers;
 
@@ -13,19 +14,22 @@ public class HomeController : Controller
     private readonly ILogger<HomeController> _logger;
     
     // For my Register
-    private readonly UserManager<IdentityUser> _userManager;
-    private readonly SignInManager<IdentityUser> _signInManager;
-    
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
     
     // For the Google ReCAPTCHA V3
     private readonly CaptchaService _captchaService;
+    
+    // For Encrypting CreditCard
+    private readonly IDataProtector _protector;
 
-    public HomeController(ILogger<HomeController> logger, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, CaptchaService captchaService)
+    public HomeController(ILogger<HomeController> logger, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, CaptchaService captchaService, IDataProtectionProvider provider)
     {
         _logger = logger;
         _userManager = userManager;
         _signInManager = signInManager;
         _captchaService = captchaService;
+        _protector = provider.CreateProtector("CreditCardProtection");
         
     }
     
@@ -136,32 +140,151 @@ public class HomeController : Controller
 
         Console.WriteLine("✅ reCAPTCHA Passed, Continuing Registration");
         
+        // File validation for the uploaded photo
+        if (model.Photo != null)
+        {
+            string fileExtension = Path.GetExtension(model.Photo.FileName).ToLower();
+            string contentType = model.Photo.ContentType.ToLower();
+
+            Console.WriteLine($"📷 Uploaded File Name: {model.Photo.FileName}");
+            Console.WriteLine($"📷 File Extension: {fileExtension}");
+            Console.WriteLine($"📷 MIME Type: {contentType}");
+
+            // Allowed extensions
+            var allowedExtensions = new HashSet<string> { ".jpg", ".jpeg" };
+
+            // Validate file extension (case insensitive)
+            if (!allowedExtensions.Contains(fileExtension))
+            {
+                Console.WriteLine("❌ File extension not allowed!");
+                ModelState.AddModelError("Photo", "Only .jpg or .jpeg files are allowed.");
+                return View(model);
+            }
+
+            // Validate MIME type (ensures the file is actually an image)
+            var allowedMimeTypes = new HashSet<string> { "image/jpeg", "image/jpg" };
+            if (!allowedMimeTypes.Contains(contentType))
+            {
+                Console.WriteLine("❌ Invalid file type!");
+                ModelState.AddModelError("Photo", "Invalid file type. Only JPEG images are allowed.");
+                return View(model);
+            }
+
+            Console.WriteLine("✅ File is a valid JPEG.");
+        }
+        else
+        {
+            Console.WriteLine("⚠ No profile photo uploaded.");
+        }
+
+        
+        
+        
+        
 
         // Validate other form fields
         if (!ModelState.IsValid)
         {
+            Console.WriteLine("❌ Model validation failed:");
+            foreach (var modelState in ModelState)
+            {
+                foreach (var error in modelState.Value.Errors)
+                {
+                    Console.WriteLine($"⚠ Field: {modelState.Key}, Error: {error.ErrorMessage}");
+                }
+            }
             return View(model);
         }
+        
+        
+        Console.WriteLine("✅ Model validation passed");
+        Console.WriteLine("🛠 Creating new ApplicationUser object...");
+        
+        
+        
+        
+        
+        
+        
+        
 
-        // Create a new user object from IdentityUser
-        var user = new IdentityUser
+        // Create a new user object from ApplicationUser
+        var user = new ApplicationUser(_protector)
         {
-            UserName = model.Email,
-            Email = model.Email
+            UserName = model.Email,  // Identity requires a unique username, using email as default
+            Email = model.Email,
+            PhoneNumber = model.PhoneNumber,
+            FirstName = model.FirstName,
+            LastName = model.LastName,
+            BillingAddress = model.BillingAddress,
+            ShippingAddress = model.ShippingAddress
         };
+        
+        Console.WriteLine($"✅ Created user object: {user.Email}");
 
-        // Add the new user to the database, in the table, AspNetUser
+        
+        // Encrypt and store credit card number
+        Console.WriteLine("🔒 Encrypting credit card...");
+        user.SetEncryptedCreditCard(model.CreditCardNumber);
+
+
+        Console.WriteLine("✅ Credit card encrypted successfully");
+        
+        // Define uploads directory
+        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+
+        // Ensure directory exists
+        if (!Directory.Exists(uploadsFolder))
+        {
+            Directory.CreateDirectory(uploadsFolder);
+            Console.WriteLine("📂 Created 'uploads' folder in wwwroot");
+        }
+
+        // Handle profile photo upload (save file and store path)
+        if (model.Photo != null && model.Photo.Length > 0)
+        {
+            Console.WriteLine("📷 Processing profile photo...");
+
+            // Generate a unique filename to prevent overwrites
+            var uniqueFileName = $"{Guid.NewGuid()}{Path.GetExtension(model.Photo.FileName)}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            // Save file to server
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await model.Photo.CopyToAsync(fileStream);
+            }
+
+            // Store relative file path in the database
+            user.PhotoPath = $"/uploads/{uniqueFileName}";
+            Console.WriteLine($"✅ Profile photo saved at: {user.PhotoPath}");
+        }
+        else
+        {
+            Console.WriteLine("⚠ No profile photo uploaded.");
+        }
+
+
+        // Add the new user to the AspNetUser, salt hash the password
         var result = await _userManager.CreateAsync(user, model.Password);
 
         if (result.Succeeded)
         {
+            Console.WriteLine("🎉 User created successfully!");
+
+            // Log user sign-in
+            Console.WriteLine($"🔑 Signing in user: {user.Email}");
             await _signInManager.SignInAsync(user, false);
+            
+            Console.WriteLine("✅ User signed in successfully");
             return RedirectToAction("Home", "Home"); // Redirect after successful registration
         }
 
         // Handle registration errors
+        Console.WriteLine("❌ User creation failed:");
         foreach (var error in result.Errors)
         {
+            Console.WriteLine($"⚠ Error: {error.Code} - {error.Description}");
             ModelState.AddModelError("", error.Description);
         }
 
@@ -212,7 +335,6 @@ public class HomeController : Controller
         return View(model);
     }
     
-   
     
     // Action Method for Confirm Logout Button
     [HttpPost]
