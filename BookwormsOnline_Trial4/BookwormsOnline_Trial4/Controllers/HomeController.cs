@@ -200,14 +200,6 @@ public class HomeController : Controller
         Console.WriteLine("✅ Model validation passed");
         Console.WriteLine("🛠 Creating new ApplicationUser object...");
         
-        
-        
-        
-        
-        
-        
-        
-
         // Create a new user object from ApplicationUser
         var user = new ApplicationUser(_protector)
         {
@@ -263,6 +255,31 @@ public class HomeController : Controller
         {
             Console.WriteLine("⚠ No profile photo uploaded.");
         }
+        
+        
+        
+        
+        
+        
+        
+        
+        // Check if the email already exists
+        var existingUser = await _userManager.FindByEmailAsync(model.Email);
+        if (existingUser != null)
+        {
+            Console.WriteLine("❌ Registration failed: Email already exists.");
+            ModelState.AddModelError("Email", "An account with this email already exists.");
+            return View(model);
+        }
+
+        Console.WriteLine("✅ Email is unique, proceeding with registration...");
+        
+        
+        
+        
+        
+        
+        
 
 
         // Add the new user to the AspNetUser, salt hash the password
