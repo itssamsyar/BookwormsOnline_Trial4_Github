@@ -43,16 +43,14 @@ namespace BookwormsOnline_Trial4.Models.ViewModels
 
 
         [Required]
-        [DataType(DataType.Password)]
-        [StringLength(100, MinimumLength = 12, ErrorMessage = "Password must be at least 12 characters long.")]
-        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$",
-            ErrorMessage =
-                "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character.")]
+        [MinLength(12, ErrorMessage = "Enter at least a 12-character password")]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])[A-Za-z\d\W_]{12,}$",
+            ErrorMessage = "Password must be at least 12 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.")]
         public string Password { get; set; }
 
+
         [Required]
-        [DataType(DataType.Password)]
-        [Compare(nameof(Password), ErrorMessage = "Password and confirmation password do not match.")]
+        [Compare("Password", ErrorMessage = "Passwords do not match.")]
         public string ConfirmPassword { get; set; }
 
         [Required] public string gRecaptchaResponse { get; set; } // Captcha Response Token

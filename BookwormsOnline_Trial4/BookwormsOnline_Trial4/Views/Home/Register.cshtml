@@ -57,14 +57,23 @@
 
                 <div class="mb-3">
                     <label class="form-label" asp-for="Password">Password</label>
-                    <input type="password" asp-for="Password" class="form-control"/>
+                    <input type="password" asp-for="Password" class="form-control" id="Password" onkeyup="checkPasswordStrength()" />
                     <span asp-validation-for="Password" class="text-danger"></span>
+                    <small id="passwordFeedback" class="form-text"></small>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label" asp-for="ConfirmPassword">Confirm Password</label>
-                    <input type="password" asp-for="ConfirmPassword" class="form-control"/>
+                    <input type="password" asp-for="ConfirmPassword" class="form-control" id="ConfirmPassword" />
                     <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+
+                <!-- Show/Hide Password Checkbox -->
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="showPassword">
+                    <label class="form-check-label" for="showPassword">
+                        Show Password
+                    </label>
                 </div>
 
                 <div class="mb-3">
@@ -87,6 +96,67 @@
     </div>
 </div>
 
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // ✅ Attach password strength check event
+        var passwordField = document.getElementById("Password");
+        if (passwordField) {
+            passwordField.addEventListener("keyup", checkPasswordStrength);
+        }
+
+        // ✅ Attach show/hide password toggle event
+        var togglePasswordField = document.getElementById("showPassword");
+        if (togglePasswordField) {
+            togglePasswordField.addEventListener("change", togglePassword);
+        }
+    });
+
+    function checkPasswordStrength() {
+        var password = document.getElementById("Password").value;
+        var feedback = document.getElementById("passwordFeedback");
+
+        var strength = 0;
+        if (password.length >= 12) strength++; // Length
+        if (/[a-z]/.test(password)) strength++; // Lowercase
+        if (/[A-Z]/.test(password)) strength++; // Uppercase
+        if (/\d/.test(password)) strength++; // Number
+        if (/[$@@$!%*?&]/.test(password)) strength++; // Special Character (Fixed '' Issue)
+
+        switch (strength) {
+            case 0:
+            case 1:
+                feedback.innerHTML = "Weak (Add more characters)";
+                feedback.style.color = "red";
+                break;
+            case 2:
+                feedback.innerHTML = "Medium (Add uppercase/lowercase)";
+                feedback.style.color = "orange";
+                break;
+            case 3:
+                feedback.innerHTML = "Strong (Add numbers/special characters)";
+                feedback.style.color = "blue";
+                break;
+            case 4:
+                feedback.innerHTML = "Excellent!";
+                feedback.style.color = "green";
+                break;
+            default:
+                feedback.innerHTML = "";
+                break;
+        }
+    }
+
+    function togglePassword() {
+        var passwordField = document.getElementById("Password");
+        var confirmPasswordField = document.getElementById("ConfirmPassword");
+        var isChecked = document.getElementById("showPassword").checked;
+
+        var type = isChecked ? "text" : "password";
+        passwordField.type = type;
+        confirmPasswordField.type = type;
+    }
+</script>
 
 
 <!-- Google reCAPTCHA v3 script -->
