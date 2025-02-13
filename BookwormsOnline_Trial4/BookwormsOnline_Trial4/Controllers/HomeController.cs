@@ -4,6 +4,7 @@ using BookwormsOnline_Trial4.Models;
 using Microsoft.AspNetCore.Identity;
 using BookwormsOnline_Trial4.Models.ViewModels;
 using BookwormsOnline_Trial4.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookwormsOnline_Trial4.Controllers;
 
@@ -39,24 +40,45 @@ public class HomeController : Controller
     }
     
     // Loads the /Home/Login.cshtml
+    [HttpGet]
     public IActionResult Login()
     {
+        return View(new LoginViewModel()); // Ensure a fresh instance is passed
+    }
+
+    
+    // Loads the /Home/Home.cshtml (logged in view)
+    [Authorize]
+    public IActionResult Home()
+    {
+        if (!User.Identity.IsAuthenticated)
+        {
+            Console.WriteLine("❌ User is NOT authenticated!");
+        }
+        else
+        {
+            Console.WriteLine($"✅ User is authenticated: {User.Identity.Name}");
+        }
+
         return View();
     }
     
-    // Loads the /Home/Home.cshtml (logged in view)
-    public IActionResult Home()
-    {
-        return View();
-    }
     
     // Loads the /Home/Index.cshtml
     public IActionResult Index()
+    {
+        return RedirectToAction("Login", "Home");
+    }
+
+    
+    // Load the /Home/Logout.cshtml
+    public IActionResult Logout()
     {
         return View();
     }
 
     // Loads the /Home/Privacy.cshtml
+    [Authorize]
     public IActionResult Privacy()
     {
         return View();
@@ -87,8 +109,14 @@ public class HomeController : Controller
     
     
     
+    
+    
+    
+    
     // ALL MY ACTION METHODS
     
+    
+    // Action Method for Register Button
     [HttpPost]
     public async Task<IActionResult> Register(RegisterViewModel model)
     {
@@ -140,11 +168,67 @@ public class HomeController : Controller
         return View(model);
     }
     
+    
+    
+    
+    
+    
     // Action Method for Login Button
+    [HttpPost]
+    public async Task<IActionResult> Login(LoginViewModel model)
+    {
+        
+        Console.WriteLine("🔍 Login POST method hit!");
+        
+        if (!ModelState.IsValid)
+        {
+            Console.WriteLine("❌ ModelState is Invalid!");
+            
+            foreach (var error in ModelState)
+            {
+                foreach (var subError in error.Value.Errors)
+                {
+                    Console.WriteLine($"❌ Validation Error for {error.Key}: {subError.ErrorMessage}");
+                }
+            }
+            
+        
+
+            return View(model);
+        }
+        
+        Console.WriteLine("The stuff is valid!");
+
+        var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
+
+        if (result.Succeeded)
+        {
+            Console.WriteLine($"✅ Login Successful! User: {model.Email}");
+            return RedirectToAction("Home", "Home");
+        }
+
+        ModelState.AddModelError("", "Username or Password incorrect");
+
+        return View(model);
+    }
     
    
     
-    // Action Method for Logout Button
+    // Action Method for Confirm Logout Button
+    [HttpPost]
+    public async Task<IActionResult> ConfirmLogout()
+    {
+        await _signInManager.SignOutAsync();
+        return RedirectToAction("Login");
+    }
+
+    
+    // Action Method for CancelLogoutButton
+    [HttpPost]
+    public IActionResult CancelLogout()
+    {
+        return RedirectToAction("Home", "Home");
+    }
     
     
     

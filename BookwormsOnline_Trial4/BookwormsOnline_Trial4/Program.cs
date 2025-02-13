@@ -20,8 +20,13 @@ builder.Services.AddSession(options =>
 builder.Services.AddDbContext<AuthDbContext>();
 builder.Services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<AuthDbContext>();
 
+// FORCE THE USER TO GO TO LOGIN PAGE IF NOT LOGGED IN
+builder.Services.ConfigureApplicationCookie(Config =>
+{
+    Config.LoginPath = "/Home/Login";
+});
+
 // ADD CAPTCHA SERVICE
-// Register CaptchaService
 builder.Services.AddHttpClient<CaptchaService>();
 builder.Services.AddScoped<CaptchaService>();
 
@@ -49,7 +54,6 @@ app.UseRouting();
 
 // FOR THE DBCONTEXT, ADD AUTHENTICATION
 app.UseAuthentication();
-
 
 app.UseAuthorization();
 
