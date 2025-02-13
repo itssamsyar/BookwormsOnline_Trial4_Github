@@ -51,6 +51,14 @@ namespace BookwormsOnline_Trial4.Models
         // TRACKING SESSIONS
         public string AuthToken { get; set; } = string.Empty;   // Stores session identifier
         public DateTime? LastLoginTime { get; set; }  // Tracks last login
+        
+        
+        // FOR 2FA LOGIN
+        // ✅ Store the generated OTP code for 2FA
+        public string? TwoFactorCode { get; set; }
+
+        // ✅ Store when the OTP expires
+        public DateTime? TwoFactorExpiry { get; set; }
 
         
     }

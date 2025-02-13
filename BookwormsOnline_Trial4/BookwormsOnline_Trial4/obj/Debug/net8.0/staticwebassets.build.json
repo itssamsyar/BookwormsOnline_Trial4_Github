@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "jYi1f3qzCtU/kvNCNVPPC4f0WXG+co6v5C8/T8pjKqY=",
+  "Hash": "jw8CiYPfa5aILOoTSYzRWh2GiYDEsltDMAqXm9QL3Ck=",
   "Source": "BookwormsOnline_Trial4",
   "BasePath": "_content/BookwormsOnline_Trial4",
   "Mode": "Default",
@@ -2561,6 +2561,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/uploads/bb3bb909-7896-489e-88dc-0da67b13bb6a.jpg"
+    },
+    {
+      "Identity": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/uploads/d6ba0a17-4090-4a44-bed9-f61c6daa6a8f.jpg",
+      "SourceId": "BookwormsOnline_Trial4",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/",
+      "BasePath": "_content/BookwormsOnline_Trial4",
+      "RelativePath": "uploads/d6ba0a17-4090-4a44-bed9-f61c6daa6a8f.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/uploads/d6ba0a17-4090-4a44-bed9-f61c6daa6a8f.jpg"
     },
     {
       "Identity": "/Users/amsyar/Documents/Github Private/BookwormsOnline_Trial4_Github/BookwormsOnline_Trial4/BookwormsOnline_Trial4/wwwroot/uploads/e3d5b024-0c40-450e-bb33-53898b248e37.jpg",

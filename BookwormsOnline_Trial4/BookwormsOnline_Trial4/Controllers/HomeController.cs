@@ -216,7 +216,41 @@ public class HomeController : Controller
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
+    
+    // Loads the /Home/Verify2FA.cshtml
+    [HttpGet]
+    public IActionResult Verify2FA(string email)
+    {
+        return View(new Verify2FAViewModel { Email = email });
+    }
 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
     // METHOD TO SANITIZE INPUT
     private string SanitizeInput(string input)
@@ -626,32 +660,22 @@ public class HomeController : Controller
 
         if (result.Succeeded)
         {
-            Console.WriteLine($"✅ Login Successful! User: {user.Email}");
+            Console.WriteLine($"✅ Password is correct. Initiating 2FA for: {user.Email}");
 
-            // ✅ Generate a new unique session token
-            string newAuthToken = Guid.NewGuid().ToString();
-
-            // ✅ Invalidate previous session by clearing old token in DB
-            user.AuthToken = newAuthToken;
-            user.LastLoginTime = DateTime.UtcNow;
+            // ✅ Generate a 6-digit OTP
+            var otpCode = new Random().Next(100000, 999999).ToString();
+            user.TwoFactorCode = otpCode;
+            user.TwoFactorExpiry = DateTime.UtcNow.AddMinutes(5); // Set expiry time (5 mins)
             await _userManager.UpdateAsync(user);
 
-            // ✅ Store session data
-            HttpContext.Session.SetString("UserId", user.Id);
-            HttpContext.Session.SetString("AuthToken", newAuthToken);
+            // ✅ Send the OTP via Email
+            await _emailSender.SendEmailAsync(user.Email, "Your 2FA Code",
+                $"Your One-Time Password (OTP) for login is: <b>{otpCode}</b>. This code expires in 5 minutes.");
 
-            // ✅ Store the "LoggedIn" session variable here
-            HttpContext.Session.SetString("LoggedIn", user.Email);
+            Console.WriteLine($"📧 OTP Sent to Email: {user.Email}");
 
-            Response.Cookies.Append("AuthToken", newAuthToken, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddHours(1)
-            });
-
-            return RedirectToAction("Home", "Home");
+            // ✅ Redirect to OTP verification page
+            return RedirectToAction("Verify2FA", new { email = user.Email });
         }
 
         Console.WriteLine("❌ Login failed: Incorrect password.");
@@ -707,20 +731,37 @@ public class HomeController : Controller
         // ✅ Hashing service from UserManager
         var passwordHasher = new PasswordHasher<ApplicationUser>();
 
-// ✅ // ✅ Check if new password matches any of the last two stored passwords
+// ✅ Check if new password matches the current password or any of the last two stored passwords
+        bool isSameAsCurrentPassword = user.PasswordHash != null &&
+                                       passwordHasher.VerifyHashedPassword(user, user.PasswordHash, model.NewPassword) 
+                                       == PasswordVerificationResult.Success;
+
         bool isSameAsOldPassword1 = user.OldPasswordHash1 != null &&
-                                    passwordHasher.VerifyHashedPassword(user, user.OldPasswordHash1,
-                                        model.NewPassword) == PasswordVerificationResult.Success;
+                                    passwordHasher.VerifyHashedPassword(user, user.OldPasswordHash1, model.NewPassword) 
+                                    == PasswordVerificationResult.Success;
 
         bool isSameAsOldPassword2 = user.OldPasswordHash2 != null &&
-                                    passwordHasher.VerifyHashedPassword(user, user.OldPasswordHash2,
-                                        model.NewPassword) == PasswordVerificationResult.Success;
+                                    passwordHasher.VerifyHashedPassword(user, user.OldPasswordHash2, model.NewPassword) 
+                                    == PasswordVerificationResult.Success;
 
 // ✅ Log debug messages
+        Console.WriteLine($"🔍 Checking against Current Password: {user.PasswordHash}");
         Console.WriteLine($"🔍 Checking against Old Password 1: {user.OldPasswordHash1}");
         Console.WriteLine($"🔍 Checking against Old Password 2: {user.OldPasswordHash2}");
+        Console.WriteLine($"🔍 Is same as Current Password? {isSameAsCurrentPassword}");
         Console.WriteLine($"🔍 Is same as Old Password 1? {isSameAsOldPassword1}");
         Console.WriteLine($"🔍 Is same as Old Password 2? {isSameAsOldPassword2}");
+
+// ✅ Enforce password policy: Reject if new password matches any of the previous ones
+        if (isSameAsCurrentPassword || isSameAsOldPassword1 || isSameAsOldPassword2)
+        {
+            Console.WriteLine("❌ New password matches with the current password.");
+            ModelState.AddModelError("", "New password cannot be the same as your current password.");
+            return View(model);
+
+            
+        }
+
 
         if (isSameAsOldPassword1 || isSameAsOldPassword2)
         {
@@ -759,6 +800,60 @@ public class HomeController : Controller
 
         Console.WriteLine("✅ Password changed successfully! Redirecting to Home page.");
         TempData["SuccessMessage"] = "Password changed successfully!";
+        return RedirectToAction("Home", "Home");
+    }
+    
+    
+    [HttpPost]
+    public async Task<IActionResult> Verify2FA(Verify2FAViewModel model)
+    {
+        Console.WriteLine($"🔍 Verifying 2FA for Email: {model.Email}");
+
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        if (user == null)
+        {
+            Console.WriteLine("❌ User not found!");
+            ModelState.AddModelError("", "Invalid request.");
+            return View(model);
+        }
+
+        // ✅ Check if OTP is expired
+        if (user.TwoFactorExpiry < DateTime.UtcNow)
+        {
+            Console.WriteLine("❌ OTP Expired.");
+            ModelState.AddModelError("", "Your OTP has expired. Please login again.");
+            return View(model);
+        }
+
+        // ✅ Check if OTP matches
+        if (user.TwoFactorCode != model.OTP)
+        {
+            Console.WriteLine("❌ Invalid OTP.");
+            ModelState.AddModelError("", "Invalid OTP. Please try again.");
+            return View(model);
+        }
+
+        Console.WriteLine("✅ OTP Verified Successfully!");
+
+        // ✅ Generate a new session token & update last login time
+        string newAuthToken = Guid.NewGuid().ToString();
+        user.AuthToken = newAuthToken;
+        user.LastLoginTime = DateTime.UtcNow;
+        await _userManager.UpdateAsync(user);
+
+        // ✅ Store session data
+        HttpContext.Session.SetString("UserId", user.Id);
+        HttpContext.Session.SetString("AuthToken", newAuthToken);
+        HttpContext.Session.SetString("LoggedIn", user.Email);
+
+        Response.Cookies.Append("AuthToken", newAuthToken, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddHours(1)
+        });
+
         return RedirectToAction("Home", "Home");
     }
 

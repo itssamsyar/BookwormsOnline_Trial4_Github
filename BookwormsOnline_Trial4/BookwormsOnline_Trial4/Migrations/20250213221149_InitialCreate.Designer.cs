@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BookwormsOnline_Trial4.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
-    [Migration("20250213203024_InitialCreate")]
+    [Migration("20250213221149_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -108,8 +108,14 @@ namespace BookwormsOnline_Trial4.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("TwoFactorCode")
+                        .HasColumnType("longtext");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("TwoFactorExpiry")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTime>("UpdatedPasswordTime")
                         .HasColumnType("datetime(6)");

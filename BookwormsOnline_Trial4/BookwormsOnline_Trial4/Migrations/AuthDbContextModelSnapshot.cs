@@ -105,8 +105,14 @@ namespace BookwormsOnline_Trial4.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("TwoFactorCode")
+                        .HasColumnType("longtext");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("TwoFactorExpiry")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTime>("UpdatedPasswordTime")
                         .HasColumnType("datetime(6)");
