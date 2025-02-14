@@ -12,6 +12,8 @@ namespace BookwormsOnline_Trial4.Models.DbContext
         {
             _configuration = configuration;
         }
+        
+        public DbSet<AuditLog> AuditLogs { get; set; } // ✅ Add Audit Logs table
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BookwormsOnline_Trial4")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+58e901a975d1da3acbe8ef9ae4a455e9bdf76d6d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+92edcc870fd9a9b0e2d96027f8a122ea15a11352")]
 [assembly: System.Reflection.AssemblyProductAttribute("BookwormsOnline_Trial4")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BookwormsOnline_Trial4")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

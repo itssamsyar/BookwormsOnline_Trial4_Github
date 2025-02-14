@@ -268,6 +268,22 @@ public class HomeController : Controller
         return HttpUtility.HtmlEncode(input);
     }
     
+    // Action Method for Audit Logs
+    private async Task LogAudit(string userId, string email, string action)
+    {
+        var auditLog = new AuditLog
+        {
+            UserId = userId,
+            Email = email,
+            Action = action,
+            IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown"
+        };
+
+        _context.AuditLogs.Add(auditLog);
+        await _context.SaveChangesAsync();
+    }
+
+    
     
     // Action Method for Toggling TwoFactorEnabled on or off
     [HttpPost]
@@ -334,6 +350,10 @@ public class HomeController : Controller
             $"Click <a href='{resetLink}'>here</a> to reset your password.");
 
         ViewBag.Message = "If the email exists, a reset link has been sent.";
+        
+        // ✅ Log Password Reset Request
+        await LogAudit(user.Id, user.Email, "Password Reset Requested");
+        
         return View();
     }
 
@@ -437,6 +457,11 @@ public class HomeController : Controller
         await _userManager.UpdateAsync(user);
 
         Console.WriteLine("✅ Password reset successfully! Redirecting to Login page.");
+        
+        // ✅ Log Password Reset Success
+        await LogAudit(user.Id, user.Email, "Password Reset Completed");
+        
+        
         TempData["SuccessMessage"] = "Password has been reset successfully!";
         return RedirectToAction("Login");
     }
@@ -646,6 +671,9 @@ public class HomeController : Controller
         if (result.Succeeded)
         {
             Console.WriteLine("🎉 User created successfully!");
+            
+            // ✅ Log Registration Event
+            await LogAudit(user.Id, user.Email, "User Registered");
             return RedirectToAction("Login", "Home"); // Redirect after successful registration
         }
 
@@ -736,6 +764,9 @@ public class HomeController : Controller
                     $"Your One-Time Password (OTP) for login is: <b>{otpCode}</b>. This code expires in 5 minutes.");
 
                 Console.WriteLine($"📧 OTP Sent to Email: {user.Email}");
+                
+                // ✅ Log OTP Sent Event
+                await LogAudit(user.Id, user.Email, "2FA OTP Sent");
 
                 // ✅ Redirect to OTP verification page
                 return RedirectToAction("Verify2FA", new { email = user.Email });
@@ -767,6 +798,10 @@ public class HomeController : Controller
                     SameSite = SameSiteMode.Strict,
                     Expires = DateTime.UtcNow.AddHours(1)
                 });
+                
+                // ✅ Log Login Event
+                await LogAudit(user.Id, user.Email, "User Login");
+
 
                 return RedirectToAction("Home", "Home");
             }
@@ -774,16 +809,25 @@ public class HomeController : Controller
         
         // ❌ Login Failed: Increment Failed Attempts
         user.FailedLoginAttempts++;
+        
+        // ❌ Log Failed Login Attempt
+        await LogAudit(user.Id, user.Email, "Failed Login Attempt");
 
         // ✅ Check if the user has reached 3 failed attempts
         if (user.FailedLoginAttempts >= 3)
         {
             Console.WriteLine("❌ User exceeded failed login attempts! Locking account.");
             user.LockoutEndTime = DateTime.UtcNow.AddMinutes(5); // Lock for 5 minutes
+            
+            // ✅ Log Account Lockout Event
+            await LogAudit(user.Id, user.Email, "Account Locked Out");
+            
             ModelState.AddModelError("", "Your account has been locked due to multiple failed login attempts. Try again after 5 minutes.");
         }
         else
         {
+          
+            
             int attemptsLeft = 3 - user.FailedLoginAttempts;
             Console.WriteLine($"❌ Incorrect password. {attemptsLeft} attempt(s) left.");
             ModelState.AddModelError("", $"Invalid email or password. {attemptsLeft} attempt(s) left before lockout.");
@@ -912,6 +956,10 @@ public class HomeController : Controller
         await _signInManager.PasswordSignInAsync(user, model.NewPassword, isPersistent: false, lockoutOnFailure: false);
 
         Console.WriteLine("✅ Password changed successfully! Redirecting to Home page.");
+        
+        // ✅ Log Password Change Event
+        await LogAudit(user.Id, user.Email, "Password Changed");
+        
         TempData["SuccessMessage"] = "Password changed successfully!";
         return RedirectToAction("Home", "Home");
     }
@@ -968,6 +1016,10 @@ public class HomeController : Controller
             SameSite = SameSiteMode.Strict,
             Expires = DateTime.UtcNow.AddHours(1)
         });
+        
+        // ✅ Log Login Event
+        await LogAudit(user.Id, user.Email, "User Login");
+
 
         return RedirectToAction("Home", "Home");
     }
@@ -992,8 +1044,14 @@ public class HomeController : Controller
                 // ✅ Invalidate session token in the database
                 user.AuthToken = null;
                 await _userManager.UpdateAsync(user);
+                
+                await LogAudit(user.Id, user.Email, "User Logged Out");
+
             }
         }
+        
+        
+
 
         // ✅ Clear session data
         HttpContext.Session.Clear();
@@ -1023,9 +1081,13 @@ public class HomeController : Controller
                 Secure = true
             });
         }
+        
+        
 
         // ✅ Sign out the user
         await _signInManager.SignOutAsync();
+        
+        
 
         // ✅ Redirect to Login page
         return RedirectToAction("Login", "Home");
