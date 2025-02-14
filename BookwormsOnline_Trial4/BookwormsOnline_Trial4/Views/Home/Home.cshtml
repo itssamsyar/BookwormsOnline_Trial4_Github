@@ -63,6 +63,18 @@
                         }
                     </td>
                 </tr>
+                <tr>
+                    <th>Two-Factor Authentication (2FA):</th>
+                    <td>
+                        <form method="post" asp-action="ToggleTwoFactor" asp-controller="Home">
+                            <input type="hidden" name="email" value="@ViewBag.User.Email" />
+                            <input type="checkbox" id="twoFactorToggle"
+                                   onchange="this.form.submit();" @(ViewBag.User.TwoFactorEnabled ? "checked" : "")>
+                            <label for="twoFactorToggle">Enable 2FA</label>
+                        </form>
+                    </td>
+                </tr>
+
             </table>
         }
         else
