@@ -49,7 +49,12 @@ namespace BookwormsOnline_Trial4.Models
         
         
         // TRACKING SESSIONS
-        public string AuthToken { get; set; } = string.Empty;   // Stores session identifier
+        
+        
+        
+        
+        
+        public string? AuthToken { get; set; } = string.Empty;   // Stores session identifier
         public DateTime? LastLoginTime { get; set; }  // Tracks last login
         
         
@@ -59,6 +64,14 @@ namespace BookwormsOnline_Trial4.Models
 
         // ✅ Store when the OTP expires
         public DateTime? TwoFactorExpiry { get; set; }
+        
+        
+        // FOR ACCOUNT LOCKOUT
+        // ✅ Track failed login attempts
+        public int FailedLoginAttempts { get; set; } = 0;
+
+        // ✅ Store the time when the account was locked
+        public DateTime? LockoutEndTime { get; set; }
 
         
     }

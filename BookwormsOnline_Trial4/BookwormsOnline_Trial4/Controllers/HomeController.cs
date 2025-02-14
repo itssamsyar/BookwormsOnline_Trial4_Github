@@ -136,7 +136,9 @@ public class HomeController : Controller
             user.BillingAddress,
             user.ShippingAddress,
             user.PhotoPath,
-            DecryptedCreditCard = decryptedCreditCard
+            DecryptedCreditCard = decryptedCreditCard,
+            
+            TwoFactorEnabled = user.TwoFactorEnabled // ✅ Pass 2FA status to View
         };
 
 
@@ -249,8 +251,7 @@ public class HomeController : Controller
     
     
     
-    
-    
+    // EXTRA METHODS FOR FUNCTIONALITY
 
     // METHOD TO SANITIZE INPUT
     private string SanitizeInput(string input)
@@ -266,6 +267,47 @@ public class HomeController : Controller
         // Encode input to prevent XSS attacks
         return HttpUtility.HtmlEncode(input);
     }
+    
+    
+    // Action Method for Toggling TwoFactorEnabled on or off
+    [HttpPost]
+    public async Task<IActionResult> ToggleTwoFactor(string email)
+    {
+        Console.WriteLine($"🔄 Toggling 2FA for {email}");
+
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user == null)
+        {
+            Console.WriteLine("❌ User not found!");
+            return RedirectToAction("Home");
+        }
+
+        // ✅ Invert the current TwoFactorEnabled value
+        user.TwoFactorEnabled = !user.TwoFactorEnabled;
+
+        var result = await _userManager.UpdateAsync(user);
+    
+        if (!result.Succeeded)
+        {
+            Console.WriteLine("❌ Error updating TwoFactorEnabled in the database.");
+            foreach (var error in result.Errors)
+            {
+                Console.WriteLine($"🔴 Error: {error.Description}");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"✅ 2FA for {email} updated to: {user.TwoFactorEnabled}");
+        }
+
+        // ✅ Refresh user session to apply changes immediately
+        await _signInManager.RefreshSignInAsync(user);
+
+        return RedirectToAction("Home");
+    }
+
+
+
 
 
     // ALL MY ACTION METHODS
@@ -527,7 +569,9 @@ public class HomeController : Controller
             FirstName = model.FirstName,
             LastName = model.LastName,
             BillingAddress = model.BillingAddress,
-            ShippingAddress = model.ShippingAddress
+            ShippingAddress = model.ShippingAddress,
+            
+            TwoFactorEnabled = true
         };
 
         Console.WriteLine($"✅ Created user object: {user.Email}");
@@ -655,28 +699,97 @@ public class HomeController : Controller
         }
 
         Console.WriteLine("✅ User found in database!");
+        
+        // ✅ Check if the account is locked
+        if (user.LockoutEndTime.HasValue && user.LockoutEndTime > DateTime.UtcNow)
+        {
+            Console.WriteLine($"❌ Account is locked until {user.LockoutEndTime.Value}");
+            ModelState.AddModelError("", $"Your account is locked. Try again after {user.LockoutEndTime.Value:HH:mm:ss} UTC.");
+            return View(model);
+        }
 
         var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
 
         if (result.Succeeded)
         {
             Console.WriteLine($"✅ Password is correct. Initiating 2FA for: {user.Email}");
-
-            // ✅ Generate a 6-digit OTP
-            var otpCode = new Random().Next(100000, 999999).ToString();
-            user.TwoFactorCode = otpCode;
-            user.TwoFactorExpiry = DateTime.UtcNow.AddMinutes(5); // Set expiry time (5 mins)
+            
+            
+            // ✅ Reset failed login attempts on successful login
+            user.FailedLoginAttempts = 0;
+            user.LockoutEndTime = null;
             await _userManager.UpdateAsync(user);
 
-            // ✅ Send the OTP via Email
-            await _emailSender.SendEmailAsync(user.Email, "Your 2FA Code",
-                $"Your One-Time Password (OTP) for login is: <b>{otpCode}</b>. This code expires in 5 minutes.");
+            // ✅ Check if Two-Factor Authentication is enabled
+            if (user.TwoFactorEnabled)
+            {
+                Console.WriteLine($"🔐 2FA is enabled for {user.Email}. Generating OTP...");
 
-            Console.WriteLine($"📧 OTP Sent to Email: {user.Email}");
+                // ✅ Generate a 6-digit OTP
+                var otpCode = new Random().Next(100000, 999999).ToString();
+                user.TwoFactorCode = otpCode;
+                user.TwoFactorExpiry = DateTime.UtcNow.AddMinutes(5); // Set expiry time (5 mins)
+                await _userManager.UpdateAsync(user);
 
-            // ✅ Redirect to OTP verification page
-            return RedirectToAction("Verify2FA", new { email = user.Email });
+                // ✅ Send the OTP via Email
+                await _emailSender.SendEmailAsync(user.Email, "Your 2FA Code",
+                    $"Your One-Time Password (OTP) for login is: <b>{otpCode}</b>. This code expires in 5 minutes.");
+
+                Console.WriteLine($"📧 OTP Sent to Email: {user.Email}");
+
+                // ✅ Redirect to OTP verification page
+                return RedirectToAction("Verify2FA", new { email = user.Email });
+            }
+            else
+            {
+                Console.WriteLine($"✅ Login Successful! User: {user.Email}");
+
+                // ✅ Generate a new unique session token
+                string newAuthToken = Guid.NewGuid().ToString();
+                
+                // ✅ Invalidate previous session by clearing old token in DB
+                user.AuthToken = newAuthToken;
+                user.LastLoginTime = DateTime.UtcNow;
+                
+                await _userManager.UpdateAsync(user);
+
+                // ✅ Store session data
+                HttpContext.Session.SetString("UserId", user.Id);
+                HttpContext.Session.SetString("AuthToken", newAuthToken);
+                
+                // ✅ Store the "LoggedIn" session variable here
+                HttpContext.Session.SetString("LoggedIn", user.Email);
+                
+                Response.Cookies.Append("AuthToken", newAuthToken, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddHours(1)
+                });
+
+                return RedirectToAction("Home", "Home");
+            }
         }
+        
+        // ❌ Login Failed: Increment Failed Attempts
+        user.FailedLoginAttempts++;
+
+        // ✅ Check if the user has reached 3 failed attempts
+        if (user.FailedLoginAttempts >= 3)
+        {
+            Console.WriteLine("❌ User exceeded failed login attempts! Locking account.");
+            user.LockoutEndTime = DateTime.UtcNow.AddMinutes(5); // Lock for 5 minutes
+            ModelState.AddModelError("", "Your account has been locked due to multiple failed login attempts. Try again after 5 minutes.");
+        }
+        else
+        {
+            int attemptsLeft = 3 - user.FailedLoginAttempts;
+            Console.WriteLine($"❌ Incorrect password. {attemptsLeft} attempt(s) left.");
+            ModelState.AddModelError("", $"Invalid email or password. {attemptsLeft} attempt(s) left before lockout.");
+        }
+
+        await _userManager.UpdateAsync(user);
 
         Console.WriteLine("❌ Login failed: Incorrect password.");
         ModelState.AddModelError("", "Invalid email or password.");
@@ -837,8 +950,10 @@ public class HomeController : Controller
 
         // ✅ Generate a new session token & update last login time
         string newAuthToken = Guid.NewGuid().ToString();
+        
         user.AuthToken = newAuthToken;
         user.LastLoginTime = DateTime.UtcNow;
+        
         await _userManager.UpdateAsync(user);
 
         // ✅ Store session data

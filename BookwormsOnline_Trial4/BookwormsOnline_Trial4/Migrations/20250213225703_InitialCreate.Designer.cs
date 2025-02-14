@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BookwormsOnline_Trial4.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
-    [Migration("20250213221149_InitialCreate")]
+    [Migration("20250213225703_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -31,7 +31,6 @@ namespace BookwormsOnline_Trial4.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("AuthToken")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("BillingAddress")
@@ -54,6 +53,9 @@ namespace BookwormsOnline_Trial4.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<int>("FailedLoginAttempts")
+                        .HasColumnType("int");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -72,6 +74,9 @@ namespace BookwormsOnline_Trial4.Migrations
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("LockoutEndTime")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
